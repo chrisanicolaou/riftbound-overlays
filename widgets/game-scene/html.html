@@ -1,0 +1,34 @@
+<div class="scene" data-primary="{{primary}}" data-secondary="{{secondary}}">
+  <!-- Full-scene backdrop. The JS cuts see-through holes where the camera and game frames sit,
+       so the OBS camera and game sources placed under this browser source show through. -->
+  <div class="rb-backdrop rb-backdrop--blueprint scene__backdrop" id="backdrop"></div>
+
+  <div class="rb-frame rb-frame--duo rb-frame--r-xl scene__cam" data-hole aria-hidden="true"></div>
+  <div class="rb-frame rb-frame--bracket rb-frame--r-lg rb-tone-primary scene__game" data-hole aria-hidden="true"></div>
+
+  <!-- Chat panel. The messages come from a separate ProChat browser source placed over .scene__chat-body. -->
+  <section class="rb-panel rb-panel--glass scene__chat">
+    <div class="scene__chat-body"></div>
+  </section>
+
+  <!-- Bar under the game: title | current opponent | ticker | record -->
+  <section class="rb-panel rb-panel--tinted rb-tone-primary scene__bar">
+    <div class="bar__section bar__headline">
+      <h2 class="title bar__name" id="bar-title"></h2>
+    </div>
+
+    <div class="bar__section bar__vs" id="vs" hidden>
+      <p class="rb-eyebrow">Current opponent</p>
+      <p class="heading bar__name" id="vs-name"></p>
+    </div>
+
+    <div class="bar__section bar__ticker" id="ticker" hidden>
+      <div class="ticker__item" id="ticker-item"></div>
+    </div>
+
+    <div class="bar__section bar__record" aria-label="Record">
+      <span class="stat record__count" id="wins">0</span><span class="rb-eyebrow record__letter">W</span>
+      <span class="stat record__count" id="losses">0</span><span class="rb-eyebrow record__letter">L</span>
+    </div>
+  </section>
+</div>

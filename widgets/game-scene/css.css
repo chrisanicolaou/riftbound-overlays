@@ -1,0 +1,41 @@
+@import url("https://cdn.jsdelivr.net/gh/chrisanicolaou/riftbound-overlays@main/riftbound-overlays.css");
+
+/* Game scene: camera top left, chat below it, game capture at 75% top right, a bar under the game.
+   Canvas 1920x1080, 48px safe margin, 24px gaps. The OBS sources must sit exactly on these boxes:
+     camera  48,48    360x360
+     game    432,48   1440x810
+     chat    72,456   312x552  (the ProChat browser source, inside the chat panel) */
+
+html, body { margin: 0; }
+
+.scene { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: var(--ink); font-family: var(--font-text); }
+.scene [hidden] { display: none !important; }
+.scene > * { position: absolute; box-sizing: border-box; }
+
+.scene__backdrop { inset: 0; }
+
+.scene__cam  { left: 48px;  top: 48px;  width: 360px;  height: 360px; }
+.scene__game { left: 432px; top: 48px;  width: 1440px; height: 810px; }
+
+.scene__chat { left: 48px; top: 432px; width: 360px; height: 600px; display: flex; flex-direction: column; }
+.scene__chat-body { flex: 1; min-height: 0; }
+
+/* Bar under the game: title | current opponent | ticker | record, split by hairlines.
+   The title gets the most room; the JS drops it from 44px to 32px if it still doesn't fit. */
+.scene__bar { left: 432px; top: 882px; width: 1440px; height: 150px; display: flex; align-items: center; gap: var(--space-6); }
+.bar__section { position: relative; min-width: 0; }
+.bar__section:not(:first-child) { padding-left: var(--space-6); }
+.bar__section:not(:first-child)::before { content: ""; position: absolute; left: 0; top: 50%; height: 64px; margin-top: -32px; width: var(--stroke-hair); background: var(--line); }
+
+.bar__headline { flex: 0 1 auto; max-width: 620px; }
+.bar__vs { flex: none; max-width: 280px; display: flex; flex-direction: column; gap: var(--space-1); }
+.bar__name { margin: 0; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.bar__ticker { flex: 1 1 0; min-width: 240px; }
+.ticker__item { display: flex; flex-direction: column; gap: var(--space-1); animation: rb-rise 360ms cubic-bezier(.2, .8, .2, 1) both; }
+.ticker__text { margin: 0; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .ticker__item { animation: none; } }
+
+.bar__record { flex: none; margin-left: auto; display: flex; align-items: baseline; gap: var(--space-2); }
+.record__count { color: var(--ink); font-variant-numeric: tabular-nums; }
+.record__letter:not(:last-child) { margin-right: var(--space-4); }

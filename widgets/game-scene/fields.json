@@ -1,0 +1,52 @@
+{
+  "primary": {
+    "type": "dropdown",
+    "label": "Primary domain",
+    "value": "fury",
+    "group": "Deck",
+    "options": { "fury": "Fury", "body": "Body", "order": "Order", "calm": "Calm", "mind": "Mind", "chaos": "Chaos" }
+  },
+  "secondary": {
+    "type": "dropdown",
+    "label": "Secondary domain",
+    "value": "mind",
+    "group": "Deck",
+    "options": { "fury": "Fury", "body": "Body", "order": "Order", "calm": "Calm", "mind": "Mind", "chaos": "Chaos" }
+  },
+  "barTitle": {
+    "type": "text",
+    "label": "Bar title (deck name, or a stream title)",
+    "value": "Kai'Sa",
+    "group": "Bar"
+  },
+  "tickerLines": {
+    "type": "text",
+    "label": "Ticker lines: Label: text | Label: text",
+    "value": "Deck list: type !deck in chat | Socials: edit these lines in the widget settings",
+    "group": "Ticker"
+  },
+  "showLatest": {
+    "type": "checkbox",
+    "label": "Add latest follower, sub and raid to the ticker",
+    "value": true,
+    "group": "Ticker"
+  },
+  "tickerSeconds": {
+    "type": "number",
+    "label": "Seconds per ticker line",
+    "value": 20,
+    "min": 5,
+    "max": 120,
+    "step": 1,
+    "group": "Ticker"
+  },
+  "resetHours": {
+    "type": "number",
+    "label": "Start a fresh record after this many hours without a result",
+    "value": 6,
+    "min": 1,
+    "max": 48,
+    "step": 1,
+    "group": "Record"
+  }
+}
