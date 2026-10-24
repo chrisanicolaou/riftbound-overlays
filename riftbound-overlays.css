@@ -1,0 +1,233 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Figtree:wght@400;500;600;700;800&display=swap");
+
+/* Riftbound Stream Overlays - generated from the design system's tokens.json and components/bundle.css.
+   Don't edit this file by hand: change the design system, then rebuild it. */
+
+/* -- Tokens ------------------------------------------------------- */
+:root, [data-theme="night"] {
+  --night-950: #070f20;
+  --night-900: #0c1a33;
+  --night-800: #13284a;
+  --night-700: #1d3964;
+  --glass: #0c1a33c7;
+  --glass-strong: #091429eb;
+  --line: #a8c8ff26;
+  --line-strong: #a8c8ff52;
+  --grid: #a8c8ff12;
+  --sheen: #ffffff17;
+  --ink: #f2f6fd;
+  --ink-muted: #b6c4dd;
+  --ink-faint: #8193b3;
+  --on-domain: var(--night-950);
+  --fury-100: #ffdada;
+  --fury-300: #ff9196;
+  --fury-500: #e5484d;
+  --fury-700: #a32a31;
+  --fury-glow: #e5484d73;
+  --fury-wash: #e5484d29;
+  --body-100: #ffe4cf;
+  --body-300: #ffb27d;
+  --body-500: #f2843a;
+  --body-700: #a9531b;
+  --body-glow: #f2843a73;
+  --body-wash: #f2843a29;
+  --order-100: #fff3c9;
+  --order-300: #ffdc7e;
+  --order-500: #f0c142;
+  --order-700: #99761a;
+  --order-glow: #f0c14273;
+  --order-wash: #f0c14229;
+  --calm-100: #d3f6e3;
+  --calm-300: #86deb1;
+  --calm-500: #3fbf84;
+  --calm-700: #1f7a52;
+  --calm-glow: #3fbf8473;
+  --calm-wash: #3fbf8429;
+  --mind-100: #dbecff;
+  --mind-300: #93c6ff;
+  --mind-500: #4a9bf5;
+  --mind-700: #2662b3;
+  --mind-glow: #4a9bf573;
+  --mind-wash: #4a9bf529;
+  --chaos-100: #eee3ff;
+  --chaos-300: #caa6ff;
+  --chaos-500: #a26cec;
+  --chaos-700: #6a3cb0;
+  --chaos-glow: #a26cec73;
+  --chaos-wash: #a26cec29;
+  --primary-100: var(--fury-100);
+  --primary-300: var(--fury-300);
+  --primary-500: var(--fury-500);
+  --primary-700: var(--fury-700);
+  --primary-glow: var(--fury-glow);
+  --primary-wash: var(--fury-wash);
+  --secondary-100: var(--mind-100);
+  --secondary-300: var(--mind-300);
+  --secondary-500: var(--mind-500);
+  --secondary-700: var(--mind-700);
+  --secondary-glow: var(--mind-glow);
+  --secondary-wash: var(--mind-wash);
+  --shadow-soft: 0 8px 24px #02061466, inset 0 1px 0 #ffffff17;
+  --shadow-lift: 0 24px 64px #020614a6, 0 2px 8px #0206144d, inset 0 1px 0 #ffffff1f;
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --stroke-hair: 1px;
+  --stroke-soft: 1.5px;
+  --stroke-bold: 2px;
+  --bracket-arm: 20px;
+  --bracket-gap: 6px;
+  --blur-glass: 18px;
+  --blur-heavy: 32px;
+  --font-display: "Bebas Neue", "Figtree", system-ui, sans-serif;
+  --font-text: "Figtree", system-ui, sans-serif;
+}
+
+.display-xl { font-family: var(--font-display); font-size: 112px; line-height: 104px; font-weight: 400; letter-spacing: 0.01em; }
+.display-l { font-family: var(--font-display); font-size: 72px; line-height: 68px; font-weight: 400; letter-spacing: 0.01em; }
+.title { font-family: var(--font-display); font-size: 44px; line-height: 44px; font-weight: 400; letter-spacing: 0.01em; }
+.heading { font-family: var(--font-display); font-size: 32px; line-height: 34px; font-weight: 400; letter-spacing: 0.01em; }
+.stat { font-family: var(--font-display); font-size: 56px; line-height: 56px; font-weight: 400; letter-spacing: 0.02em; }
+.label { font-family: var(--font-display); font-size: 20px; line-height: 22px; font-weight: 400; letter-spacing: 0.08em; }
+.body-l { font-family: var(--font-text); font-size: 24px; line-height: 32px; font-weight: 500; }
+.body { font-family: var(--font-text); font-size: 20px; line-height: 28px; font-weight: 500; }
+.caption { font-family: var(--font-text); font-size: 16px; line-height: 22px; font-weight: 500; }
+
+/* -- Deck theming -----------------------------------------------
+   data-primary / data-secondary on an overlay's root (or <DeckTheme>)
+   re-point the role tokens at one domain's scale. Defaults: fury / mind. */
+[data-primary="fury"] { --primary-100: var(--fury-100); --primary-300: var(--fury-300); --primary-500: var(--fury-500); --primary-700: var(--fury-700); --primary-glow: var(--fury-glow); --primary-wash: var(--fury-wash); }
+[data-primary="body"] { --primary-100: var(--body-100); --primary-300: var(--body-300); --primary-500: var(--body-500); --primary-700: var(--body-700); --primary-glow: var(--body-glow); --primary-wash: var(--body-wash); }
+[data-primary="order"] { --primary-100: var(--order-100); --primary-300: var(--order-300); --primary-500: var(--order-500); --primary-700: var(--order-700); --primary-glow: var(--order-glow); --primary-wash: var(--order-wash); }
+[data-primary="calm"] { --primary-100: var(--calm-100); --primary-300: var(--calm-300); --primary-500: var(--calm-500); --primary-700: var(--calm-700); --primary-glow: var(--calm-glow); --primary-wash: var(--calm-wash); }
+[data-primary="mind"] { --primary-100: var(--mind-100); --primary-300: var(--mind-300); --primary-500: var(--mind-500); --primary-700: var(--mind-700); --primary-glow: var(--mind-glow); --primary-wash: var(--mind-wash); }
+[data-primary="chaos"] { --primary-100: var(--chaos-100); --primary-300: var(--chaos-300); --primary-500: var(--chaos-500); --primary-700: var(--chaos-700); --primary-glow: var(--chaos-glow); --primary-wash: var(--chaos-wash); }
+[data-secondary="fury"] { --secondary-100: var(--fury-100); --secondary-300: var(--fury-300); --secondary-500: var(--fury-500); --secondary-700: var(--fury-700); --secondary-glow: var(--fury-glow); --secondary-wash: var(--fury-wash); }
+[data-secondary="body"] { --secondary-100: var(--body-100); --secondary-300: var(--body-300); --secondary-500: var(--body-500); --secondary-700: var(--body-700); --secondary-glow: var(--body-glow); --secondary-wash: var(--body-wash); }
+[data-secondary="order"] { --secondary-100: var(--order-100); --secondary-300: var(--order-300); --secondary-500: var(--order-500); --secondary-700: var(--order-700); --secondary-glow: var(--order-glow); --secondary-wash: var(--order-wash); }
+[data-secondary="calm"] { --secondary-100: var(--calm-100); --secondary-300: var(--calm-300); --secondary-500: var(--calm-500); --secondary-700: var(--calm-700); --secondary-glow: var(--calm-glow); --secondary-wash: var(--calm-wash); }
+[data-secondary="mind"] { --secondary-100: var(--mind-100); --secondary-300: var(--mind-300); --secondary-500: var(--mind-500); --secondary-700: var(--mind-700); --secondary-glow: var(--mind-glow); --secondary-wash: var(--mind-wash); }
+[data-secondary="chaos"] { --secondary-100: var(--chaos-100); --secondary-300: var(--chaos-300); --secondary-500: var(--chaos-500); --secondary-700: var(--chaos-700); --secondary-glow: var(--chaos-glow); --secondary-wash: var(--chaos-wash); }
+
+/* -- Tones: what a component's tone / domain resolves to ---------- */
+.rb-tone-primary { --tone-100: var(--primary-100); --tone-300: var(--primary-300); --tone-500: var(--primary-500); --tone-700: var(--primary-700); --tone-glow: var(--primary-glow); --tone-wash: var(--primary-wash); }
+.rb-tone-secondary { --tone-100: var(--secondary-100); --tone-300: var(--secondary-300); --tone-500: var(--secondary-500); --tone-700: var(--secondary-700); --tone-glow: var(--secondary-glow); --tone-wash: var(--secondary-wash); }
+.rb-tone-neutral { --tone-100: var(--ink); --tone-300: var(--ink-muted); --tone-500: var(--night-700); --tone-700: var(--night-800); --tone-glow: var(--line-strong); --tone-wash: var(--line); }
+.rb-domain-fury { --tone-100: var(--fury-100); --tone-300: var(--fury-300); --tone-500: var(--fury-500); --tone-700: var(--fury-700); --tone-glow: var(--fury-glow); --tone-wash: var(--fury-wash); }
+.rb-domain-body { --tone-100: var(--body-100); --tone-300: var(--body-300); --tone-500: var(--body-500); --tone-700: var(--body-700); --tone-glow: var(--body-glow); --tone-wash: var(--body-wash); }
+.rb-domain-order { --tone-100: var(--order-100); --tone-300: var(--order-300); --tone-500: var(--order-500); --tone-700: var(--order-700); --tone-glow: var(--order-glow); --tone-wash: var(--order-wash); }
+.rb-domain-calm { --tone-100: var(--calm-100); --tone-300: var(--calm-300); --tone-500: var(--calm-500); --tone-700: var(--calm-700); --tone-glow: var(--calm-glow); --tone-wash: var(--calm-wash); }
+.rb-domain-mind { --tone-100: var(--mind-100); --tone-300: var(--mind-300); --tone-500: var(--mind-500); --tone-700: var(--mind-700); --tone-glow: var(--mind-glow); --tone-wash: var(--mind-wash); }
+.rb-domain-chaos { --tone-100: var(--chaos-100); --tone-300: var(--chaos-300); --tone-500: var(--chaos-500); --tone-700: var(--chaos-700); --tone-glow: var(--chaos-glow); --tone-wash: var(--chaos-wash); }
+
+/* -- Shared bits -------------------------------------------------- */
+.rb-eyebrow { display: block; margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 22px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; color: var(--tone-300, var(--ink-muted)); }
+
+/* Deck pips: the deck's signature, a long primary pill and a short secondary one */
+.rb-pips { display: inline-flex; flex: none; align-items: center; gap: var(--space-1); }
+.rb-pips::before, .rb-pips::after { content: ""; height: 8px; border-radius: var(--radius-pill); }
+.rb-pips::before { width: 28px; background: var(--primary-500); box-shadow: 0 0 12px var(--primary-glow); }
+.rb-pips::after { width: 14px; background: var(--secondary-500); box-shadow: 0 0 12px var(--secondary-glow); }
+
+/* Gradient ring used by the duo Frame and Dialog: a masked pseudo-element,
+   so the fill inside can stay translucent glass. */
+.rb-frame--duo::before, .rb-dialog::before {
+  padding: var(--stroke-bold);
+  background: linear-gradient(135deg, var(--primary-300), var(--line) 50%, var(--secondary-300));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* -- Frame: borders around sources (webcam, game capture) --------- */
+.rb-frame { --rb-r: var(--radius-lg); position: relative; box-sizing: border-box; border-radius: var(--rb-r); box-shadow: var(--shadow-soft); }
+.rb-frame--r-md { --rb-r: var(--radius-md); }
+.rb-frame--r-lg { --rb-r: var(--radius-lg); }
+.rb-frame--r-xl { --rb-r: var(--radius-xl); }
+.rb-frame__inner { position: relative; height: 100%; border-radius: inherit; overflow: hidden; }
+.rb-frame::before, .rb-frame::after { position: absolute; inset: 0; box-sizing: border-box; border-radius: inherit; pointer-events: none; z-index: 1; }
+.rb-frame::before { content: ""; }
+
+.rb-frame--hairline::before { border: var(--stroke-hair) solid var(--line-strong); }
+
+.rb-frame--glow { box-shadow: 0 0 0 6px var(--tone-wash), 0 0 48px 4px var(--tone-glow); }
+.rb-frame--glow::before { border: var(--stroke-soft) solid var(--tone-300); }
+
+.rb-frame--duo { box-shadow: -16px -12px 48px -16px var(--primary-glow), 16px 12px 48px -16px var(--secondary-glow), var(--shadow-soft); }
+
+.rb-frame--bracket::after { content: ""; border: var(--stroke-hair) solid var(--line); }
+.rb-frame--bracket::before {
+  --rb-arm: calc(var(--rb-r) + var(--bracket-gap) + var(--bracket-arm));
+  inset: calc(var(--bracket-gap) * -1);
+  border: var(--stroke-bold) solid var(--tone-300);
+  border-radius: calc(var(--rb-r) + var(--bracket-gap));
+  -webkit-mask: linear-gradient(#000 0 0) 0 0 / var(--rb-arm) var(--rb-arm) no-repeat, linear-gradient(#000 0 0) 100% 0 / var(--rb-arm) var(--rb-arm) no-repeat, linear-gradient(#000 0 0) 0 100% / var(--rb-arm) var(--rb-arm) no-repeat, linear-gradient(#000 0 0) 100% 100% / var(--rb-arm) var(--rb-arm) no-repeat;
+  mask: linear-gradient(#000 0 0) 0 0 / var(--rb-arm) var(--rb-arm) no-repeat, linear-gradient(#000 0 0) 100% 0 / var(--rb-arm) var(--rb-arm) no-repeat, linear-gradient(#000 0 0) 0 100% / var(--rb-arm) var(--rb-arm) no-repeat, linear-gradient(#000 0 0) 100% 100% / var(--rb-arm) var(--rb-arm) no-repeat;
+  filter: drop-shadow(0 0 8px var(--tone-glow));
+}
+
+/* -- Panel: persistent boxes that hold information ---------------- */
+.rb-panel { position: relative; box-sizing: border-box; padding: var(--space-6); border-radius: var(--radius-lg); background: var(--glass); -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass)); box-shadow: var(--shadow-soft); color: var(--ink); font-family: var(--font-text); font-size: 20px; line-height: 28px; font-weight: 500; }
+.rb-panel::before { content: ""; position: absolute; inset: 0; border-radius: inherit; border: var(--stroke-hair) solid var(--line); pointer-events: none; }
+.rb-panel--solid { background: var(--night-900); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.rb-panel--tinted { background: linear-gradient(160deg, var(--tone-wash), transparent 65%), var(--glass); }
+.rb-panel--tinted::before { border-color: var(--tone-glow); }
+.rb-panel--compact { padding: var(--space-4); border-radius: var(--radius-md); }
+.rb-panel__head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.rb-panel__head:last-child { margin-bottom: 0; }
+.rb-panel__titles { flex: 1; min-width: 0; }
+.rb-panel__title { margin: 0; font-family: var(--font-display); font-size: 32px; line-height: 34px; font-weight: 400; letter-spacing: .01em; color: var(--ink); }
+
+/* -- Dialog: pops in over the game for a moment ------------------- */
+.rb-dialog { position: relative; box-sizing: border-box; max-width: 560px; padding: var(--space-6) var(--space-8) var(--space-8); border-radius: var(--radius-xl); color: var(--ink); font-family: var(--font-text);
+  background: radial-gradient(90% 70% at 0% 0%, var(--primary-wash), transparent 70%), radial-gradient(90% 70% at 100% 100%, var(--secondary-wash), transparent 70%), var(--glass-strong);
+  -webkit-backdrop-filter: blur(var(--blur-heavy)); backdrop-filter: blur(var(--blur-heavy));
+  box-shadow: var(--shadow-lift), -24px -16px 64px -24px var(--primary-glow), 24px 16px 64px -24px var(--secondary-glow); }
+.rb-dialog::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.rb-dialog--primary { background: radial-gradient(110% 80% at 0% 0%, var(--primary-wash), transparent 70%), var(--glass-strong); box-shadow: var(--shadow-lift), 0 0 64px -16px var(--primary-glow); }
+.rb-dialog--primary::before { background: linear-gradient(135deg, var(--primary-300), var(--primary-glow) 55%, var(--primary-wash)); }
+.rb-dialog--secondary { background: radial-gradient(110% 80% at 0% 0%, var(--secondary-wash), transparent 70%), var(--glass-strong); box-shadow: var(--shadow-lift), 0 0 64px -16px var(--secondary-glow); }
+.rb-dialog--secondary::before { background: linear-gradient(135deg, var(--secondary-300), var(--secondary-glow) 55%, var(--secondary-wash)); }
+.rb-dialog__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 22px; margin-bottom: var(--space-3); }
+.rb-dialog__title { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: 44px; line-height: 44px; font-weight: 400; letter-spacing: .01em; color: var(--ink); }
+.rb-dialog__body { margin: 0; font-size: 20px; line-height: 28px; font-weight: 500; color: var(--ink-muted); }
+.rb-dialog__body p { margin: 0; }
+.rb-dialog__foot { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-4); border-top: var(--stroke-hair) solid var(--line); font-size: 16px; line-height: 22px; font-weight: 500; color: var(--ink-muted); }
+.rb-dialog--enter { animation: rb-rise 360ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes rb-rise { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rb-dialog--enter { animation: none; } }
+
+/* -- Backdrop: full-scene backgrounds ----------------------------- */
+.rb-backdrop { position: relative; box-sizing: border-box; overflow: hidden; color: var(--ink); font-family: var(--font-text); background: var(--night-950); }
+.rb-backdrop--night { background: radial-gradient(120% 90% at 50% 0%, var(--night-800), var(--night-950) 75%); }
+.rb-backdrop--blueprint { background:
+  linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / var(--space-12) var(--space-12),
+  linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / var(--space-12) var(--space-12),
+  radial-gradient(120% 90% at 50% 0%, var(--night-800), var(--night-950) 75%); }
+.rb-backdrop--aurora { background:
+  radial-gradient(55% 65% at 10% 15%, var(--primary-wash), transparent 70%),
+  radial-gradient(35% 45% at 14% 18%, var(--primary-glow), transparent 70%),
+  radial-gradient(55% 65% at 90% 88%, var(--secondary-wash), transparent 70%),
+  radial-gradient(35% 45% at 86% 84%, var(--secondary-glow), transparent 70%),
+  radial-gradient(120% 90% at 50% 0%, var(--night-800), var(--night-950) 75%); }
+.rb-backdrop--veil { background: var(--glass); -webkit-backdrop-filter: blur(var(--blur-heavy)); backdrop-filter: blur(var(--blur-heavy)); }
+
+/* -- DomainBadge: names a domain ---------------------------------- */
+.rb-badge { display: inline-flex; align-items: center; gap: var(--space-2); box-sizing: border-box; height: 34px; padding: 0 var(--space-4) 0 var(--space-3); border-radius: var(--radius-pill); font-family: var(--font-display); font-size: 20px; line-height: 22px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; background: var(--tone-wash); color: var(--tone-300); box-shadow: inset 0 0 0 1px var(--tone-glow); }
+.rb-badge__dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--tone-500); box-shadow: 0 0 10px var(--tone-glow); }
+.rb-badge--solid { background: var(--tone-500); color: var(--on-domain); box-shadow: 0 6px 18px -6px var(--tone-glow), inset 0 1px 0 var(--sheen); }
+.rb-badge--solid .rb-badge__dot { background: var(--on-domain); box-shadow: none; }
