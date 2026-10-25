@@ -21,10 +21,9 @@ html, body { margin: 0; }
 .scene__chat { left: 48px; top: 432px; width: 360px; height: 600px; padding-top: var(--space-2); display: flex; flex-direction: column; }
 .scene__chat-body { flex: 1; min-height: 0; }
 
-/* Borders a step thicker than the design system's, and the camera ring without its coloured glow. */
+/* 4px borders, thicker than the design system's, and the camera ring without its coloured glow. */
 .scene__cam { box-shadow: var(--shadow-soft); }
-.scene__cam::before { padding: 3px; }
-.scene__game::before, .scene__chat::before, .scene__bar::before { border-width: var(--stroke-bold); }
+.scene__cam::before, .scene__game::before, .scene__chat::before, .scene__bar::before { border-width: 4px; }
 
 /* Bar under the game: title | current opponent | ticker | record, split by hairlines.
    The title gets the most room; the JS drops it from 44px to 32px if it still doesn't fit. */

@@ -142,11 +142,11 @@
 .rb-pips::before { width: 28px; background: var(--primary-500); box-shadow: 0 0 12px var(--primary-glow); }
 .rb-pips::after { width: 14px; background: var(--secondary-500); box-shadow: 0 0 12px var(--secondary-glow); }
 
-/* Gradient ring used by the duo Frame and Dialog: a masked pseudo-element,
-   so the fill inside can stay translucent glass. */
-.rb-frame--duo::before, .rb-dialog::before {
+/* Dialog ring: a masked pseudo-element, so the fill inside can stay translucent glass
+   and the primary / secondary tones can fade along it. */
+.rb-dialog::before {
   padding: var(--stroke-bold);
-  background: linear-gradient(135deg, var(--primary-300), var(--line) 50%, var(--secondary-300));
+  background: var(--secondary-300);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -168,6 +168,7 @@
 .rb-frame--glow::before { border: var(--stroke-soft) solid var(--tone-300); }
 
 .rb-frame--duo { box-shadow: -16px -12px 48px -16px var(--primary-glow), 16px 12px 48px -16px var(--secondary-glow), var(--shadow-soft); }
+.rb-frame--duo::before { border: var(--stroke-hair) solid var(--secondary-300); }
 
 .rb-frame--bracket::after { content: ""; border: var(--stroke-hair) solid var(--line); }
 .rb-frame--bracket::before {
