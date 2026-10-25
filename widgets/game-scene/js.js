@@ -22,13 +22,12 @@ function setText(id, value) {
   document.getElementById(id).hidden = !text;
 }
 
-// Masks the backdrop so it is transparent wherever a [data-hole] frame sits (same box, same corner radius).
+// Masks `target` so it is transparent over each of `els` (same box, same corner radius).
 // Uses layout offsets rather than getBoundingClientRect so the StreamElements editor's preview scaling doesn't skew it.
-function cutHoles() {
-  const backdrop = document.getElementById('backdrop');
-  const w = backdrop.offsetWidth;
-  const h = backdrop.offsetHeight;
-  const holes = [...document.querySelectorAll('[data-hole]')].map((el) => {
+function maskOut(target, els) {
+  const w = target.offsetWidth;
+  const h = target.offsetHeight;
+  const holes = [...els].map((el) => {
     const r = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
     return `<rect x='${el.offsetLeft}' y='${el.offsetTop}' width='${el.offsetWidth}' height='${el.offsetHeight}' rx='${r}' fill='black'/>`;
   }).join('');
@@ -36,8 +35,15 @@ function cutHoles() {
     `<mask id='m'><rect width='${w}' height='${h}' fill='white'/>${holes}</mask>` +
     `<rect width='${w}' height='${h}' mask='url(#m)'/></svg>`;
   const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
-  backdrop.style.webkitMaskImage = url;
-  backdrop.style.maskImage = url;
+  target.style.webkitMaskImage = url;
+  target.style.maskImage = url;
+}
+
+// The backdrop is see-through wherever a [data-hole] frame sits, and its shards stay out from behind
+// [data-no-shards] panels, so those only blur the plain ground.
+function cutHoles() {
+  maskOut(document.getElementById('backdrop'), document.querySelectorAll('[data-hole]'));
+  maskOut(document.getElementById('shards'), document.querySelectorAll('[data-no-shards]'));
 }
 
 // Long titles drop from the 44px title size to the 32px heading size before they get cut off.

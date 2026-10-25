@@ -2,6 +2,8 @@
 
 Camera top left, chat below it, the game at 75% (1440×810) top right, and a bar under the game. It's one StreamElements widget covering the whole 1920×1080 canvas. The camera and game are OBS sources placed *under* the overlay, and they show through rounded holes in its backdrop. Chat comes from a ProChat Browser Source placed *over* it.
 
+The backdrop is the design system's shatter Backdrop: the deck's two colours as grainy shards drifting slowly down and to the right over a graphite fade. The shards are kept out from behind the chat panel and the bar, so those stay plain.
+
 The bar, left to right:
 
 - **Title:** a deck name ("Kai'Sa") or a stream title ("Kai'Sa coaching from willwin"). Long titles shrink from 44px to 32px to fit, up to about 45 characters.

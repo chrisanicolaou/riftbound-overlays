@@ -1,18 +1,21 @@
 <div class="scene" data-primary="{{primary}}" data-secondary="{{secondary}}">
   <!-- Full-scene backdrop. The JS cuts see-through holes where the camera and game frames sit,
-       so the OBS camera and game sources placed under this browser source show through. -->
-  <div class="rb-backdrop rb-backdrop--blueprint scene__backdrop" id="backdrop"></div>
+       so the OBS camera and game sources placed under this browser source show through, and keeps
+       the shards out from behind the chat panel and the bar. -->
+  <div class="rb-backdrop rb-backdrop--shatter scene__backdrop" id="backdrop">
+    <div class="rb-backdrop__shards" id="shards"></div>
+  </div>
 
   <div class="rb-frame rb-frame--duo rb-frame--r-xl scene__cam" data-hole aria-hidden="true"></div>
   <div class="rb-frame rb-frame--hairline rb-frame--r-lg scene__game" data-hole aria-hidden="true"></div>
 
   <!-- Chat panel. The messages come from a separate ProChat browser source placed over .scene__chat-body. -->
-  <section class="rb-panel rb-panel--glass scene__chat">
+  <section class="rb-panel rb-panel--glass scene__chat" data-no-shards>
     <div class="scene__chat-body"></div>
   </section>
 
   <!-- Bar under the game: title | current opponent | ticker | record -->
-  <section class="rb-panel rb-panel--tinted rb-tone-primary scene__bar">
+  <section class="rb-panel rb-panel--tinted rb-tone-primary scene__bar" data-no-shards>
     <div class="bar__section bar__headline">
       <h2 class="title bar__name" id="bar-title"></h2>
     </div>

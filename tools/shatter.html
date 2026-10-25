@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shatter backdrop generator</title>
+<!-- Makes the shard shapes for the design system's shatter Backdrop (rb-backdrop--shatter).
+     Serve the repo root (python -m http.server 8765), open /tools/shatter.html, pick a layout and a number of
+     shapes, then paste the CSS it prints over the "Shard shapes" lines in the design system's
+     components/bundle.css and rebuild riftbound-overlays.css. The preview uses the local riftbound-overlays.css,
+     with the shapes swapped for the ones shown here. The controls are kept in the URL. -->
+<script>document.write(`<link rel="stylesheet" href="../riftbound-overlays.css?v=${Date.now()}">`); // cache-busted, so a rebuild shows straight away</script>
+<style id="shards"></style>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1b1b; color: #ddd; font: 14px/1.3 system-ui, sans-serif; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 8px 12px; background: #111; border-bottom: 1px solid #333; }
+  .controls label { display: flex; align-items: center; gap: 6px; }
+  .controls input[type="range"] { width: 110px; }
+  .controls input[type="number"] { width: 70px; }
+  .controls output { min-width: 1.5em; color: #fff; }
+  #viewport { position: absolute; left: 0; right: 0; bottom: 0; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  dialog { width: min(900px, 90vw); background: #111; color: #ddd; border: 1px solid #444; }
+  dialog textarea { box-sizing: border-box; width: 100%; height: 50vh; background: #000; color: #9f9; font: 12px/1.4 ui-monospace, monospace; }
+
+  /* Preview speeds. Real speed is the stylesheet's (650s / 1000s per loop). */
+  [data-motion="10x"] .rb-backdrop__shards::before { animation-duration: 100s; }
+  [data-motion="10x"] .rb-backdrop__shards::after  { animation-duration: 65s; }
+  [data-motion="50x"] .rb-backdrop__shards::before { animation-duration: 20s; }
+  [data-motion="50x"] .rb-backdrop__shards::after  { animation-duration: 13s; }
+  [data-motion="off"] .rb-backdrop__shards::before, [data-motion="off"] .rb-backdrop__shards::after { animation: none; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <label>Primary <select id="primary"></select></label>
+  <label>Secondary <select id="secondary"></select></label>
+  <label>Shapes <input id="density" type="range" min="1" max="5" step="1"><output for="density"></output></label>
+  <label>Layout <input id="seed" type="number" min="0" max="9999" step="1"><button id="shuffle" type="button">Shuffle</button></label>
+  <label>Motion <select id="motion"><option value="on">On</option><option value="10x">10x faster (preview only)</option><option value="50x">50x faster (preview only)</option><option value="off">Off</option></select></label>
+  <button id="show-css" type="button">CSS for bundle.css</button>
+</div>
+
+<div id="viewport">
+  <div class="rb-backdrop rb-backdrop--shatter" id="stage"><div class="rb-backdrop__shards"></div></div>
+</div>
+
+<dialog id="css-dialog">
+  <p>Paste over the "Shard shapes" lines in the design system's <code>components/bundle.css</code>, then rebuild <code>riftbound-overlays.css</code>.</p>
+  <textarea id="css" readonly></textarea>
+  <p><button id="copy" type="button">Copy</button> <button id="close" type="button">Close</button></p>
+</dialog>
+
+<script>
+const DOMAINS = ['fury', 'body', 'order', 'calm', 'mind', 'chaos'];
+const W = 1920, H = 1080;
+// The pattern repeats every V along the drift (33 degrees, whole pixels so the loop lands exactly). Each layer is
+// the pattern plus copies one and two repeats back; the stylesheet slides it one repeat per loop.
+const V = [2180, 1416];
+const P = Math.hypot(V[0], V[1]);
+const U = [V[0] / P, V[1] / P];
+const ANGLE = Math.atan2(V[1], V[0]);
+const LAYER = { x: -V[0] - 40, y: -V[1] - 40, w: W + V[0] + 80, h: H + V[1] + 80 };
+
+const q = new URLSearchParams(location.search);
+const state = {
+  primary: q.get('primary') || 'mind',
+  secondary: q.get('secondary') || 'order',
+  density: Number(q.get('density') || 3),
+  seed: Number(q.get('seed') || 7),
+  motion: ['10x', '50x', 'off'].includes(q.get('motion')) ? q.get('motion') : 'on',
+};
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Moves a shape by whole repeats so it starts between -200 and P - 200 along the drift. Shapes are under 2100px
+// long that way, so the pattern and its two copies behind it cover the canvas for the whole loop.
+function wrap(points) {
+  const start = Math.min(...points.map(([x, y]) => x * U[0] + y * U[1]));
+  const k = Math.floor((start + 200) / P);
+  return points.map(([x, y]) => [x - k * V[0], y - k * V[1]]);
+}
+
+// Lays the shards out in diagonal streams that alternate primary / secondary. Each stream gets one broad band and
+// a few thin spikes, spread over one repeat of its length.
+function layout(seed, density) {
+  const r = rng(seed);
+  const between = (a, b) => a + r() * (b - a);
+  const parts = { primary: { bands: [], shards: [] }, secondary: { bands: [], shards: [] } };
+  const streams = 2 + density;
+  const spikes = [1, 2, 2, 3, 4][density - 1];
+  const nMin = -1150, nMax = 1000;
+  const step = (nMax - nMin) / streams;
+
+  // Each layer's streams get evenly spaced phases, in shuffled order: as one band slides off screen another is
+  // coming on, so about the same amount shows at any point in the loop.
+  const phases = {};
+  for (const role of ['primary', 'secondary']) {
+    const order = [...Array(role === 'primary' ? Math.ceil(streams / 2) : Math.floor(streams / 2)).keys()];
+    for (let j = order.length - 1; j > 0; j--) {
+      const swap = Math.floor(r() * (j + 1));
+      [order[j], order[swap]] = [order[swap], order[j]];
+    }
+    phases[role] = order.map((j) => (j + between(-0.1, 0.1)) / order.length);
+  }
+
+  for (let i = 0; i < streams; i++) {
+    const role = i % 2 ? 'secondary' : 'primary';
+    const part = parts[role];
+    const phase = phases[role][Math.floor(i / 2)];
+    const o = nMin + step * (i + 0.5 + between(-0.2, 0.2));
+    const th = ANGLE + between(-0.05, 0.05);
+    const d = [Math.cos(th), Math.sin(th)], n = [-Math.sin(th), Math.cos(th)];
+    const at = (t, k) => [n[0] * (o + k) + d[0] * t, n[1] * (o + k) + d[1] * t];
+
+    // Phases are measured from the middle of the stretch where this stream crosses the canvas. `around` brings a
+    // position back to within half a repeat of it, so shapes stay on the stream's own (slightly tilted) line.
+    const x0 = n[0] * o, y0 = n[1] * o;
+    const tx = [-x0 / d[0], (W - x0) / d[0]], ty = [-y0 / d[1], (H - y0) / d[1]];
+    const tc = (Math.max(Math.min(...tx), Math.min(...ty)) + Math.min(Math.max(...tx), Math.max(...ty))) / 2;
+    const around = (t) => tc - P / 2 + ((((t - tc + P / 2) % P) + P) % P);
+
+    // Broad band: a long shard with one straight cut edge, wider for the primary colour.
+    const len = P * between(0.55, 0.75);
+    const t0 = around(tc + phase * P) - len / 2, t1 = t0 + len;
+    const wide = (role === 'primary' ? 1.3 : 1) * (r() < 0.5 ? -1 : 1);
+    part.bands.push({
+      points: wrap([at(t0, 0), at(t0 + len * between(0.25, 0.45), between(110, 230) * wide), at(t0 + len * between(0.6, 0.8), between(80, 180) * wide), at(t1, 0), at(t0 + len * between(0.4, 0.6), -between(10, 40) * wide)]),
+      alpha: between(0.6, 1),
+    });
+
+    // Thin spikes, mostly pointing down-right, some back up-left, fading (and so getting grainier) toward the tip.
+    // They're spread evenly over the half of the loop when the band is away, filling the gap it leaves.
+    for (let s = 0; s < spikes; s++) {
+      const sign = r() < 0.3 ? -1 : 1;
+      const phi = th + between(-0.12, 0.12);
+      const sd = [Math.cos(phi), Math.sin(phi)], sn = [-Math.sin(phi), Math.cos(phi)];
+      const base = at(around(tc + P * (phase + 0.5 + (s + 0.5 - spikes / 2 + between(-0.3, 0.3)) / (spikes * 2))), between(-150, 150));
+      const half = between(14, 45), length = between(300, 850);
+      part.shards.push({
+        points: wrap([[base[0] + sn[0] * half, base[1] + sn[1] * half], [base[0] - sn[0] * half, base[1] - sn[1] * half], [base[0] + sd[0] * length * sign, base[1] + sd[1] * length * sign]]),
+        dir: sign > 0 ? 'f' : 'r',
+        alpha: between(0.55, 1),
+      });
+    }
+  }
+  return parts;
+}
+
+const pts = (list) => list.map(([x, y]) => `${Math.round(x)},${Math.round(y)}`).join(' ');
+
+// One layer's mask: only alpha counts, the stylesheet fills it with the deck colour. The spray filter blurs the
+// shapes' edges, eats into them with fine noise (more where they're fainter) and mottles them with a slow cloud.
+// The two copies are <use>s of the filtered original, so their grain matches it exactly.
+function maskSvg(part, noiseSeed) {
+  return `<svg xmlns='http://www.w3.org/2000/svg' width='${LAYER.w}' height='${LAYER.h}' viewBox='${LAYER.x} ${LAYER.y} ${LAYER.w} ${LAYER.h}'>`
+    + `<filter id='s' x='-.05' y='-.05' width='1.1' height='1.1' color-interpolation-filters='sRGB'>`
+    + `<feGaussianBlur in='SourceAlpha' stdDeviation='6' result='soft'/>`
+    + `<feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='2' seed='${noiseSeed}' result='noise'/>`
+    + `<feColorMatrix in='noise' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0' result='grain'/>`
+    + `<feComposite in='soft' in2='grain' operator='arithmetic' k2='2.6' k3='-1.9' result='spray'/>`
+    + `<feTurbulence type='fractalNoise' baseFrequency='.006' numOctaves='3' seed='${noiseSeed + 1}' result='cloud'/>`
+    + `<feColorMatrix in='cloud' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.3 0 0 0 .05' result='mottle'/>`
+    + `<feComposite in='spray' in2='mottle' operator='arithmetic' k1='1'/>`
+    + `</filter>`
+    + `<linearGradient id='f' x2='1' y2='1'><stop offset='0' stop-opacity='.9'/><stop offset='1' stop-opacity='.1'/></linearGradient>`
+    + `<linearGradient id='r' x1='1' y1='1' x2='0' y2='0'><stop offset='0' stop-opacity='.9'/><stop offset='1' stop-opacity='.1'/></linearGradient>`
+    + `<g id='t' filter='url(#s)'>`
+    + part.bands.map((b) => `<polygon points='${pts(b.points)}' fill-opacity='${b.alpha.toFixed(2)}'/>`).join('')
+    + part.shards.map((s) => `<polygon points='${pts(s.points)}' fill='url(#${s.dir})' fill-opacity='${s.alpha.toFixed(2)}'/>`).join('')
+    + `</g>`
+    + `<use href='#t' transform='translate(${-V[0]} ${-V[1]})'/>`
+    + `<use href='#t' transform='translate(${-V[0] * 2} ${-V[1] * 2})'/>`
+    + `</svg>`;
+}
+
+const dataUri = (svg) => `data:image/svg+xml,${svg.replace(/%/g, '%25').replace(/#/g, '%23').replace(/</g, '%3C').replace(/>/g, '%3E')}`;
+
+function cssBlock(seed, density) {
+  const parts = layout(seed, density);
+  return `/* Shard shapes: layout #${seed}, ${density} shapes. Made with tools/shatter.html in the riftbound-overlays repo; paste its output over these lines. */\n`
+    + `.rb-backdrop__shards::before { --rb-shards: url("${dataUri(maskSvg(parts.secondary, seed + 11))}"); }\n`
+    + `.rb-backdrop__shards::after { --rb-shards: url("${dataUri(maskSvg(parts.primary, seed + 3))}"); }\n`;
+}
+
+const stage = document.getElementById('stage');
+const viewport = document.getElementById('viewport');
+
+function render() {
+  stage.dataset.primary = state.primary;
+  stage.dataset.secondary = state.secondary;
+  stage.dataset.motion = state.motion;
+  const css = cssBlock(state.seed, state.density);
+  document.getElementById('shards').textContent = css;
+  document.getElementById('css').value = css;
+  document.querySelector('output[for="density"]').textContent = state.density;
+  history.replaceState(null, '', `?${new URLSearchParams(state)}`);
+}
+
+function fit() {
+  viewport.style.top = `${document.querySelector('.controls').offsetHeight}px`;
+  const s = Math.min(viewport.clientWidth / W, viewport.clientHeight / H);
+  stage.style.transform = `translate(${(viewport.clientWidth - W * s) / 2}px, ${(viewport.clientHeight - H * s) / 2}px) scale(${s})`;
+}
+
+for (const key of ['primary', 'secondary']) {
+  document.getElementById(key).innerHTML = DOMAINS.map((d) => `<option>${d}</option>`).join('');
+}
+for (const key of ['primary', 'secondary', 'density', 'seed', 'motion']) {
+  const el = document.getElementById(key);
+  el.value = state[key];
+  el.addEventListener('input', () => { state[key] = ['range', 'number'].includes(el.type) ? Number(el.value) : el.value; render(); });
+}
+document.getElementById('shuffle').addEventListener('click', () => {
+  state.seed = Math.floor(Math.random() * 9999);
+  document.getElementById('seed').value = state.seed;
+  render();
+});
+const dialog = document.getElementById('css-dialog');
+document.getElementById('show-css').addEventListener('click', () => dialog.showModal());
+document.getElementById('close').addEventListener('click', () => dialog.close());
+document.getElementById('copy').addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('css').value));
+addEventListener('resize', fit);
+
+render();
+fit();
+</script>
+</body>
+</html>
