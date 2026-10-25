@@ -1,5 +1,5 @@
 [
   { "name": "Camera", "kind": "camera", "layer": "below", "x": 48, "y": 48, "width": 360, "height": 360 },
   { "name": "Game capture", "kind": "game", "layer": "below", "x": 432, "y": 48, "width": 1440, "height": 810 },
-  { "name": "ProChat overlay", "kind": "chat", "layer": "above", "x": 72, "y": 456, "width": 312, "height": 552 }
+  { "name": "ProChat overlay", "kind": "chat", "layer": "above", "x": 72, "y": 440, "width": 312, "height": 568 }
 ]

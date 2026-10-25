@@ -37,7 +37,7 @@ Set each one with Edit Transform (Ctrl+E): position, then size with the bounding
 
 | Source | Type | Position | Size |
 |---|---|---|---|
-| ProChat overlay | Browser Source, 312×552 | 72, 456 | 312×552 |
+| ProChat overlay | Browser Source, 312×568 | 72, 440 | 312×568 |
 | StreamElements overlay | Browser Source, 1920×1080 | 0, 0 | 1920×1080 |
 | Camera | your camera, cropped square (e.g. crop 420 left and right on a 1920×1080 camera) | 48, 48 | 360×360 |
 | Game capture | window or game capture | 432, 48 | 1440×810 |

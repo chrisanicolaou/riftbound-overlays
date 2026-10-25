@@ -4,7 +4,8 @@
    Canvas 1920x1080, 48px safe margin, 24px gaps. The OBS sources must sit exactly on these boxes:
      camera  48,48    360x360
      game    432,48   1440x810
-     chat    72,456   312x552  (the ProChat browser source, inside the chat panel) */
+     chat    72,440   312x568  (the ProChat browser source, inside the chat panel; 8px from its top so
+                               messages scrolling off the top are cut close to the panel's edge) */
 
 html, body { margin: 0; }
 
@@ -17,8 +18,13 @@ html, body { margin: 0; }
 .scene__cam  { left: 48px;  top: 48px;  width: 360px;  height: 360px; }
 .scene__game { left: 432px; top: 48px;  width: 1440px; height: 810px; }
 
-.scene__chat { left: 48px; top: 432px; width: 360px; height: 600px; display: flex; flex-direction: column; }
+.scene__chat { left: 48px; top: 432px; width: 360px; height: 600px; padding-top: var(--space-2); display: flex; flex-direction: column; }
 .scene__chat-body { flex: 1; min-height: 0; }
+
+/* Borders a step thicker than the design system's, and the camera ring without its coloured glow. */
+.scene__cam { box-shadow: var(--shadow-soft); }
+.scene__cam::before { padding: 3px; }
+.scene__game::before, .scene__chat::before, .scene__bar::before { border-width: var(--stroke-bold); }
 
 /* Bar under the game: title | current opponent | ticker | record, split by hairlines.
    The title gets the most room; the JS drops it from 44px to 32px if it still doesn't fit. */
