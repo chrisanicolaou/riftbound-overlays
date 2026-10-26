@@ -46,6 +46,14 @@ function cutHoles() {
   maskOut(document.getElementById('shards'), document.querySelectorAll('[data-no-shards]'));
 }
 
+// Cuts the holes now and again whenever one of those boxes changes size. On a cold OBS start, onWidgetLoad
+// can fire before the stylesheet is applied, when the backdrop is 0px tall and its mask would hide all of it.
+function watchHoles() {
+  cutHoles();
+  const observer = new ResizeObserver(() => cutHoles());
+  document.querySelectorAll('#backdrop, #shards, [data-hole], [data-no-shards]').forEach((el) => observer.observe(el));
+}
+
 // Long titles drop from the 44px title size to the 32px heading size before they get cut off.
 function fitTitle() {
   const el = document.getElementById('bar-title');
@@ -177,7 +185,7 @@ window.addEventListener('onWidgetLoad', async (obj) => {
   setText('bar-title', fields.barTitle);
   fitTitle();
   document.fonts.ready.then(fitTitle);
-  cutHoles();
+  watchHoles();
 
   const session = (obj.detail.session && obj.detail.session.data) || {};
   Object.keys(LATEST).forEach((listener) => { latest[LATEST[listener]] = latestText(listener, session[listener]); });
