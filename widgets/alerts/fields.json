@@ -1,0 +1,52 @@
+{
+  "primary": {
+    "type": "dropdown",
+    "label": "Primary domain",
+    "value": "fury",
+    "group": "Deck",
+    "options": { "fury": "Fury", "body": "Body", "order": "Order", "calm": "Calm", "mind": "Mind", "chaos": "Chaos" }
+  },
+  "secondary": {
+    "type": "dropdown",
+    "label": "Secondary domain",
+    "value": "mind",
+    "group": "Deck",
+    "options": { "fury": "Fury", "body": "Body", "order": "Order", "calm": "Calm", "mind": "Mind", "chaos": "Chaos" }
+  },
+  "avatar": {
+    "type": "image-input",
+    "label": "Stream picture (shown in the badge)",
+    "value": "",
+    "group": "Look"
+  },
+  "bitsFoil": {
+    "type": "number",
+    "label": "Cheers of this many bits get the gold foil card",
+    "value": 1000,
+    "min": 100,
+    "step": 100,
+    "group": "Look"
+  },
+  "centreX": {
+    "type": "number",
+    "label": "Strip centre, x (px)",
+    "value": 1044,
+    "group": "Position"
+  },
+  "top": {
+    "type": "number",
+    "label": "Strip top, y (px)",
+    "value": 44,
+    "group": "Position"
+  },
+  "raidGlow": {
+    "type": "checkbox",
+    "label": "Glow around the game on raids",
+    "value": true,
+    "group": "Position"
+  },
+  "glowX": { "type": "number", "label": "Raid glow x (px)", "value": 432, "group": "Position" },
+  "glowY": { "type": "number", "label": "Raid glow y (px)", "value": 48, "group": "Position" },
+  "glowW": { "type": "number", "label": "Raid glow width (px)", "value": 1440, "group": "Position" },
+  "glowH": { "type": "number", "label": "Raid glow height (px)", "value": 810, "group": "Position" }
+}

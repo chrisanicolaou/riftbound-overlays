@@ -1,0 +1,130 @@
+@import url("https://cdn.jsdelivr.net/gh/chrisanicolaou/riftbound-overlays@main/riftbound-overlays.css");
+@import url("https://fonts.googleapis.com/css2?family=Lilita+One&display=swap");
+
+/* Alerts: one strip at a time, the stream's picture in a badge hanging off its left end, then the viewer's name and
+   one line. The JS places the strip from the Position fields (by default over the opponent's face-down hand, at the
+   top of the game). These styles deliberately depart from the design system: Lilita One, a white sticker border,
+   gold foil and emoji, with loops while a strip is up. */
+
+html, body { margin: 0; }
+
+.alerts { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; pointer-events: none; color: var(--ink); font-family: var(--font-text); }
+.alerts canvas { position: absolute; inset: 0; }
+
+.alert { position: absolute; width: max-content; min-width: 300px; max-width: 560px; }
+.alert[hidden] { display: none; }
+.alert__card { position: relative; }
+.alert__face { position: relative; box-sizing: border-box; padding: 14px 36px 14px 100px; }
+.alert__badge { position: absolute; z-index: 2; left: -24px; top: 50%; width: 104px; height: 104px; margin-top: -52px; border-radius: 50%; isolation: isolate; }
+.alert__avatar { width: 100%; height: 100%; overflow: hidden; border-radius: 50%; }
+.alert__avatar img { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(1.43) translate(-4.4%, 3.5%); }
+.alert__badge--empty .alert__avatar { background: linear-gradient(135deg, var(--primary-500), var(--secondary-500)); }
+.alert__name { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.alert__line { margin: 2px 0 0; font: 500 18px/24px var(--font-text); font-variant-numeric: tabular-nums; }
+.alert__back, .alert__frame { display: none; }
+
+.alert.is-leaving { animation: leave-fade 420ms cubic-bezier(.4, 0, 1, 1) both; }
+@keyframes leave-fade { to { opacity: 0; transform: translateY(-12px) scale(.97); } }
+@keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes spin-loop { to { transform: rotate(360deg); } }
+
+/* -- Rune burst (follows): the design system's glass with a spinning deck ring, a flash, sparks and a sheen. */
+.style-rune .alert__face { border-radius: 999px;
+  background: radial-gradient(90% 70% at 0% 0%, var(--primary-wash), transparent 70%), radial-gradient(90% 70% at 100% 100%, var(--secondary-wash), transparent 70%), var(--glass-strong);
+  box-shadow: var(--shadow-lift), -24px -16px 64px -24px var(--primary-glow), 24px 16px 64px -24px var(--secondary-glow);
+  animation: rise 420ms 140ms cubic-bezier(.2, .8, .2, 1) both; }
+.style-rune .alert__face::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 3px; pointer-events: none; background: linear-gradient(135deg, var(--primary-300), var(--secondary-300));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.style-rune .alert__face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .18) 50%, transparent 62%) no-repeat; background-size: 250% 100%;
+  animation: sheen 1100ms 380ms ease-out both; }
+@keyframes sheen { from { background-position: 150% 0; } to { background-position: -60% 0; } }
+.style-rune .alert__badge { animation: rune-pop 600ms cubic-bezier(.3, 1.6, .5, 1) both; }
+.style-rune .alert__badge::before { content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: 50%;
+  background: conic-gradient(var(--primary-500), var(--secondary-500), var(--primary-300), var(--secondary-300), var(--primary-500));
+  box-shadow: 0 0 26px var(--primary-glow), 0 0 50px var(--secondary-glow); animation: spin 1600ms cubic-bezier(.2, .8, .2, 1) both; }
+.style-rune .alert__avatar { box-shadow: 0 0 0 3px var(--night-950); }
+.style-rune .alert__name { font: 400 40px/44px var(--font-display); letter-spacing: .01em; color: var(--ink); }
+.style-rune .alert__line { color: var(--ink-muted); }
+@keyframes rune-pop { from { transform: scale(.3); opacity: 0; } 40% { opacity: 1; } to { transform: none; } }
+@keyframes spin { from { transform: rotate(-220deg); } to { transform: none; } }
+
+/* -- Card pull (cheers): a card flips over to reveal the viewer. Big cheers get a gold edge and foil. */
+.style-card { perspective: 1400px; animation: fade-in 160ms both; }
+.style-card .alert__card { transform-style: preserve-3d; animation: card-flip 900ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes card-flip { 0% { transform: translateY(24px) rotateY(-180deg) scale(.8); } 65% { transform: translateY(-3px) rotateY(10deg) scale(1.03); } 100% { transform: none; } }
+.style-card .alert__face, .style-card .alert__back { border-radius: 24px; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.style-card .alert__face { background: radial-gradient(80% 60% at 50% 0%, var(--primary-wash), transparent 70%), linear-gradient(180deg, var(--night-800), var(--night-950));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .55), 0 0 44px -12px var(--primary-glow); }
+.style-card .alert__face::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 3px; pointer-events: none; background: linear-gradient(150deg, var(--primary-300), var(--secondary-300) 60%, var(--primary-500));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.style-card.is-foil .alert__face::before { background: linear-gradient(150deg, #fff1bf, #d9a440 30%, #fff4cf 50%, #b8862b 75%, #ffe39a); }
+.style-card .alert__frame { display: block; position: absolute; inset: 8px; border: 1.5px solid rgba(255, 255, 255, .14); border-radius: 16px; pointer-events: none; }
+.style-card .alert__back { display: block; position: absolute; inset: 0; transform: rotateY(180deg);
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 28px, var(--primary-300) 29px 31px, transparent 32px 40px, var(--secondary-300) 41px 42px, transparent 43px),
+    repeating-linear-gradient(45deg, var(--primary-wash) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(-45deg, var(--secondary-wash) 0 2px, transparent 2px 18px),
+    linear-gradient(160deg, var(--night-800), var(--night-950));
+  box-shadow: inset 0 0 0 3px var(--primary-300), 0 20px 50px rgba(0, 0, 0, .55); }
+.style-card .alert__avatar { box-shadow: 0 0 0 4px var(--night-900), 0 0 0 7px var(--primary-300), 0 8px 26px rgba(0, 0, 0, .5); }
+.style-card.is-foil .alert__avatar { box-shadow: 0 0 0 4px var(--night-900), 0 0 0 7px #f2c766, 0 0 30px rgba(242, 199, 102, .55); }
+.style-card .alert__name { font: 400 38px/42px var(--font-display); letter-spacing: .02em; color: var(--ink); }
+.style-card .alert__line { color: var(--ink-muted); }
+.style-card.is-foil .alert__face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: screen;
+  background: linear-gradient(115deg, transparent 25%, rgba(255, 80, 200, .22) 38%, rgba(255, 220, 90, .22) 46%, rgba(90, 255, 210, .22) 54%, rgba(100, 140, 255, .22) 62%, transparent 75%);
+  background-size: 300% 100%; animation: foil 3s 700ms ease-in-out infinite alternate both; }
+@keyframes foil { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+.style-card.is-leaving { animation: leave-fade-only 420ms cubic-bezier(.4, 0, 1, 1) both; }
+.style-card.is-leaving .alert__card { animation: card-out 420ms cubic-bezier(.4, 0, 1, 1) both; }
+@keyframes leave-fade-only { to { opacity: 0; } }
+@keyframes card-out { to { transform: rotateY(90deg) scale(.9); } }
+
+/* -- Poro party (subs and gift subs): a sticker that bounces in, then emoji and confetti fly. */
+.style-party .alert__face { border: 5px solid #fff; border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+  box-shadow: 0 8px 0 rgba(0, 0, 0, .25), 0 20px 40px rgba(0, 0, 0, .45); color: var(--night-950);
+  transform: rotate(-2deg); animation: party-pop 640ms 240ms cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes party-pop { from { opacity: 0; transform: rotate(-12deg) scale(.4); } 30% { opacity: 1; } to { transform: rotate(-2deg); } }
+.style-party .alert__badge { left: -29px; transform-origin: 50% 100%; animation: party-drop 900ms both, party-wiggle 800ms 1000ms ease-in-out; }
+@keyframes party-drop {
+  0% { opacity: 0; transform: translateY(-140px) scale(.6); animation-timing-function: cubic-bezier(.5, 0, 1, 1); }
+  35% { opacity: 1; transform: none; animation-timing-function: ease-out; }
+  45% { transform: scale(1.24, .76); animation-timing-function: ease-out; }
+  62% { transform: translateY(-24px) scale(.9, 1.12); animation-timing-function: ease-in; }
+  78% { transform: scale(1.06, .94); animation-timing-function: ease-out; }
+  100% { transform: none; } }
+@keyframes party-wiggle { 25% { transform: rotate(9deg); } 50% { transform: rotate(-7deg); } 75% { transform: rotate(4deg); } }
+.style-party .alert__avatar { box-shadow: 0 0 0 5px #fff, 0 8px 0 5px rgba(0, 0, 0, .22); }
+.style-party .alert__name { font: 400 40px/44px "Lilita One", sans-serif; color: #07101f; }
+.style-party .alert__line { font-weight: 700; color: rgba(6, 12, 24, .82); }
+.style-party.is-leaving { animation: party-out 380ms cubic-bezier(.6, -.4, .8, .4) both; }
+@keyframes party-out { 30% { transform: scale(1.06); } to { opacity: 0; transform: scale(0) rotate(10deg); } }
+
+/* -- Rift (raids): a bright slit tears open into the strip, glass shards fly out, the badge spins out of a portal.
+   The fill is the deck's two colours flowing along the strip, inside a spinning white-and-deck border. A glow
+   pulses twice around the game (placed by the JS). */
+.game-pulse { position: absolute; border-radius: 16px; pointer-events: none; opacity: 0;
+  box-shadow: inset 0 0 0 4px var(--primary-300), inset 0 0 90px var(--primary-glow), 0 0 50px var(--primary-glow); }
+.game-pulse.is-on { animation: game-pulse 1100ms 200ms ease-out 2 both; }
+@keyframes game-pulse { 25% { opacity: 1; } 100% { opacity: 0; } }
+@property --rift-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.style-rift .alert__face { isolation: isolate; padding-right: 44px; }
+.style-rift .alert__face::before, .style-rift .alert__face::after { content: ""; position: absolute; z-index: -1; border-radius: 999px; pointer-events: none; }
+.style-rift .alert__face::before { inset: -4px; background: conic-gradient(from var(--rift-angle), #ffffff, var(--primary-300), #ffffff, var(--secondary-300), #ffffff);
+  box-shadow: 0 0 40px var(--primary-glow), 0 0 90px var(--secondary-glow);
+  animation: rift-open 640ms 180ms cubic-bezier(.2, .8, .2, 1) both, rift-spin 2.2s linear infinite; }
+.style-rift .alert__face::after { inset: 0; background: linear-gradient(110deg, var(--primary-500), var(--secondary-500) 50%, var(--primary-500)); background-size: 200% 100%;
+  animation: rift-open 640ms 180ms cubic-bezier(.2, .8, .2, 1) both, rift-flow 5s linear infinite; }
+@keyframes rift-open { from { clip-path: inset(0 50% round 999px); filter: brightness(4); } 25% { clip-path: inset(0 47% round 999px); } to { clip-path: inset(-80px round 999px); filter: none; } }
+@keyframes rift-spin { to { --rift-angle: 360deg; } }
+@keyframes rift-flow { to { background-position: 200% 0; } }
+.style-rift .alert__name, .style-rift .alert__line { animation: fade-in 300ms 560ms both; }
+.style-rift .alert__name { font: 400 42px/46px var(--font-display); letter-spacing: .01em; color: #07101f; }
+.style-rift .alert__line { font-weight: 700; color: rgba(6, 12, 24, .82); }
+.style-rift .alert__badge { animation: rift-badge 700ms 300ms cubic-bezier(.3, 1.4, .5, 1) both; }
+.style-rift .alert__badge::before { content: ""; position: absolute; inset: -12px; z-index: -1; border-radius: 50%; filter: blur(3px);
+  background: conic-gradient(var(--primary-500), transparent 25%, var(--secondary-500) 50%, transparent 75%, var(--primary-500)); animation: spin-loop 1.4s linear infinite; }
+.style-rift .alert__avatar { box-shadow: 0 0 0 3px var(--night-950), 0 0 0 5px var(--primary-300); }
+@keyframes rift-badge { from { opacity: 0; transform: scale(0) rotate(-270deg); } to { opacity: 1; transform: none; } }
