@@ -4,6 +4,10 @@
 //   !vs Renekton                      current opponent (!vs alone clears it)
 // The record and opponent are saved in the StreamElements store, so they survive reloads.
 // They start fresh once nothing has changed for `resetHours`.
+// Sub train: every sub, resub and gift sub (a gift bomb counts all its subs) adds to a train that takes the ticker's
+// place in the bar from its `trainShowFrom`th sub. Each sub refills its `trainSeconds` timer; every `trainLevelEvery`
+// subs is a level, and the train picks up speed up to level 5. When the timer runs out it shows "Train over" for
+// 5 seconds and the ticker comes back. The train is saved in the store too, so a reload mid-train keeps it.
 
 const STORE_KEY = 'rbGameScene';
 const LATEST = { 'follower-latest': 'follower', 'subscriber-latest': 'sub', 'raid-latest': 'raid' };
@@ -176,6 +180,54 @@ function startTicker(jumpTo) {
 function latestText(listener, event) {
   if (!event || !event.name) return '';
   return listener === 'raid-latest' && event.amount ? `${event.name} (${event.amount})` : event.name;
+}
+
+// -- Sub train: decisions (pure, unit-tested in tests/game-scene-train.test.js) --------
+
+const TRAIN_OVER_MS = 5000; // how long "Train over" stays up
+const TRAIN_PEAK_LEVEL = 5; // full speed from this level up
+
+// How many subs an event adds to the train. A gift bomb counts once, from its first event; the gifts that follow don't.
+function trainSubs(listener, event) {
+  if (listener !== 'subscriber-latest' || !event || event.isCommunityGift) return 0;
+  if (event.bulkGifted) return Math.max(0, Math.floor(Number(event.amount) || 0));
+  return 1;
+}
+
+// Who a sub is credited to: the gifter for gifts, else the subscriber.
+function trainName(event) {
+  if (!event.gifted && !event.bulkGifted) return (event.name || '').trim();
+  const sender = (event.sender || '').trim();
+  return !sender || sender.toLowerCase() === 'ananonymousgifter' ? 'Anonymous' : sender;
+}
+
+function trainLevel(count, every) {
+  return Math.floor(count / every) + 1;
+}
+
+// How hyped the train is, 0 at level 1 to 1 at the peak level and beyond.
+function trainHype(level) {
+  return Math.min(level - 1, TRAIN_PEAK_LEVEL - 1) / (TRAIN_PEAK_LEVEL - 1);
+}
+
+// Adds `n` subs at `nowMs`. A train that has run out (including one showing "Train over") is replaced by a new one.
+function trainAdd(train, n, name, nowMs, cfg) {
+  const continuing = !!train && nowMs < train.endsAt;
+  const before = continuing ? train.count : 0;
+  const count = before + n;
+  const levelUp = continuing && before >= cfg.showFrom && trainLevel(count, cfg.every) > trainLevel(before, cfg.every);
+  return { train: { count, latest: name, endsAt: nowMs + cfg.seconds * 1000 }, levelUp, started: !continuing };
+}
+
+function trainPhase(train, nowMs, cfg) {
+  if (!train || train.count < cfg.showFrom || nowMs >= train.endsAt + TRAIN_OVER_MS) return 'off';
+  return nowMs >= train.endsAt ? 'over' : 'live';
+}
+
+// A train saved before a reload, if it's well formed and still running.
+function restoreTrain(saved, nowMs) {
+  if (!saved || !Number.isFinite(saved.count) || typeof saved.latest !== 'string' || !Number.isFinite(saved.endsAt)) return null;
+  return nowMs < saved.endsAt ? { count: saved.count, latest: saved.latest, endsAt: saved.endsAt } : null;
 }
 
 // -- StreamElements events --------------------------------------------
