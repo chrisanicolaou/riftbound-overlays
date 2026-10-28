@@ -104,6 +104,9 @@ function takeNext(queue) {
 
 const EXIT_MS = 460; // the strip's exit animation
 const GAP_MS = 300; // pause between one alert leaving and the next arriving
+// Every face the strips use. Web fonts only load once text uses them, so they're loaded up front: a strip measured
+// in a fallback font would be sized and centred wrongly.
+const FONTS = ['400 40px "Bebas Neue"', '400 40px "Lilita One"', '500 18px Figtree', '700 18px Figtree'];
 
 let fields = {};
 let queue = [];
@@ -136,6 +139,18 @@ function posIn(node, root) {
 function fitName(n) {
   let size = parseFloat(getComputedStyle(n).fontSize);
   while (n.scrollWidth > n.clientWidth + 1 && size > 28) { size -= 2; n.style.fontSize = `${size}px`; }
+}
+
+// Fits the name, then centres what you see, badge included (it hangs off the left end), and locks the width so a
+// ticking count can't jiggle it.
+function layoutStrip(el) {
+  const name = el.querySelector('.alert__name');
+  const badge = el.querySelector('.alert__badge');
+  name.style.fontSize = '';
+  el.style.width = '';
+  fitName(name);
+  el.style.left = `${num(fields.centreX, 1044) - (el.offsetWidth - Math.max(0, -badge.offsetLeft)) / 2}px`;
+  el.style.width = `${el.offsetWidth}px`;
 }
 
 function runQueue() {
@@ -171,12 +186,11 @@ function showAlert(alert) {
         <p class="alert__line">${esc(alert.line)}</p>
       </div>
     </div>`;
-  fitName(el.querySelector('.alert__name'));
+  layoutStrip(el);
+  // If a font was still loading (a cold start can beat the stylesheet), lay the strip out again once it's in.
+  document.fonts.ready.then(() => { if (current === alert) layoutStrip(el); });
   const badge = el.querySelector('.alert__badge');
   const face = el.querySelector('.alert__face');
-  // Centre what you see, badge included (it hangs off the left end). Lock the width so a ticking count can't jiggle it.
-  el.style.left = `${num(fields.centreX, 1044) - (el.offsetWidth - Math.max(0, -badge.offsetLeft)) / 2}px`;
-  el.style.width = `${el.offsetWidth}px`;
 
   const pulse = document.getElementById('pulse');
   pulse.classList.remove('is-on');
@@ -364,7 +378,7 @@ window.addEventListener('onWidgetLoad', (obj) => {
   });
   ctxs = { back: document.getElementById('fx-back').getContext('2d'), front: document.getElementById('fx-front').getContext('2d') };
   requestAnimationFrame(frame);
-  ready = document.fonts.ready;
+  ready = Promise.all(FONTS.map((f) => document.fonts.load(f))).catch(() => {});
   runQueue();
 });
 
