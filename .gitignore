@@ -1,0 +1,8 @@
+# Personal files the preview drafts use: the stream's picture, its alert sound and a game screenshot.
+preview/avatar.png
+preview/alert-sound.*
+preview/game-sample.webp
+*.wav
+
+# Scratch space for planning tools.
+.superpowers/
