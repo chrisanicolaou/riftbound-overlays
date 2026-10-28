@@ -159,8 +159,15 @@ function runQueue() {
   ready.then(() => {
     const next = takeNext(queue);
     queue = next.rest;
-    if (next.alert) showAlert(next.alert);
-    else busy = false;
+    if (!next.alert) { busy = false; return; }
+    try {
+      showAlert(next.alert);
+    } catch (err) {
+      // Never let one broken alert stall the queue for the rest of the stream.
+      console.error('Alert failed to show', err);
+      current = current || next.alert;
+      leaveAlert();
+    }
   });
 }
 
