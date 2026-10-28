@@ -18,6 +18,15 @@ const TIERS = { 1000: 'Just subscribed at tier 1', 2000: 'Just subscribed at tie
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const formatNumber = (n) => Number(n).toLocaleString('en-US');
 
+// "1 bit", "5,000 bits".
+function plural(n, word) {
+  return `${formatNumber(n)} ${word}${Number(n) === 1 ? '' : 's'}`;
+}
+
+function raidLine(viewers) {
+  return `Raiding with ${plural(viewers, 'viewer')}`;
+}
+
 function gifterName(event) {
   const sender = (event.sender || '').trim();
   return !sender || sender.toLowerCase() === 'ananonymousgifter' ? 'Anonymous' : sender;
@@ -45,19 +54,19 @@ function describeEvent(listener, event, fields) {
   if (listener === 'follower-latest') return name ? makeAlert('follow', name, 'New follower', HOLD.follow, 1) : null;
   if (listener === 'subscriber-latest') {
     if (event.isCommunityGift) return null; // part of a gift bomb, which has its own alert
-    if (event.bulkGifted) return makeAlert('bomb', gifterName(event), `Just gifted ${formatNumber(amount)} subs`, amount >= BIG_BOMB ? HOLD.bigBomb : HOLD.sub, amount);
+    if (event.bulkGifted) return makeAlert('bomb', gifterName(event), `Just gifted ${plural(amount, 'sub')}`, amount >= BIG_BOMB ? HOLD.bigBomb : HOLD.sub, amount);
     if (event.gifted) return makeAlert('gift', gifterName(event), `Gifted a sub to ${name}`, HOLD.sub, 1);
     if (!name) return null;
-    if (amount > 1) return makeAlert('resub', name, `Subscribed for ${formatNumber(amount)} months`, HOLD.sub, 1);
+    if (amount > 1) return makeAlert('resub', name, `Subscribed for ${plural(amount, 'month')}`, HOLD.sub, 1);
     return makeAlert('sub', name, TIERS[String(event.tier).toLowerCase()] || 'Just subscribed', HOLD.sub, 1);
   }
   if (listener === 'cheer-latest') {
     if (!name) return null;
     const foil = amount >= (Number(fields && fields.bitsFoil) || 1000);
-    return makeAlert('bits', name, `Cheered ${formatNumber(amount)} bits`, foil ? HOLD.bitsFoil : HOLD.bits, amount, { foil });
+    return makeAlert('bits', name, `Cheered ${plural(amount, 'bit')}`, foil ? HOLD.bitsFoil : HOLD.bits, amount, { foil });
   }
   if (listener === 'raid-latest') {
-    return name ? makeAlert('raid', name, `Raiding with ${formatNumber(amount)} viewers`, HOLD.raid, amount, { viewers: amount }) : null;
+    return name ? makeAlert('raid', name, raidLine(amount), HOLD.raid, amount, { viewers: amount }) : null;
   }
   return null;
 }
@@ -301,7 +310,7 @@ function shards(o, n, colours, dir, spread) {
 }
 // Ticks a raid's viewer count up from 0.
 function countUp(lineEl, viewers, startMs) {
-  for (let i = 0; i <= 20; i++) at(startMs + i * 55, () => { lineEl.textContent = `Raiding with ${formatNumber(Math.round(viewers * (1 - (1 - i / 20) ** 3)))} viewers`; });
+  for (let i = 0; i <= 20; i++) at(startMs + i * 55, () => { lineEl.textContent = raidLine(Math.round(viewers * (1 - (1 - i / 20) ** 3))); });
 }
 function perimeter(r) {
   let t = Math.random() * 2 * (r.w + r.h), x, y;

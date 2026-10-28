@@ -83,3 +83,11 @@ test('nextMuted uses the event when it says, else toggles', () => {
   assert.equal(w.nextMuted(false, {}), true);
   assert.equal(w.nextMuted(true, undefined), false);
 });
+
+test('counts of one read naturally', () => {
+  assert.equal(w.describeEvent('subscriber-latest', { bulkGifted: true, sender: 'ana', amount: 1 }, F).line, 'Just gifted 1 sub');
+  assert.equal(w.describeEvent('cheer-latest', { name: 'ana', amount: 1 }, F).line, 'Cheered 1 bit');
+  assert.equal(w.describeEvent('raid-latest', { name: 'ana', amount: 1 }, F).line, 'Raiding with 1 viewer');
+  assert.equal(w.raidLine(1), 'Raiding with 1 viewer');
+  assert.equal(w.raidLine(0), 'Raiding with 0 viewers');
+});

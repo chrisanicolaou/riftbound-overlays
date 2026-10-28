@@ -48,3 +48,8 @@ test('restoring after a reload', () => {
   assert.equal(w.restoreTrain({ count: 'x', latest: 'a', endsAt: 5000 }, 4000), null);
   assert.equal(w.restoreTrain(null, 0), null);
 });
+
+test('the train-over total reads naturally', () => {
+  assert.equal(w.subsText(1), '1 sub');
+  assert.equal(w.subsText(12), '12 subs');
+});

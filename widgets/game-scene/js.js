@@ -188,6 +188,11 @@ function latestText(listener, event) {
 const TRAIN_OVER_MS = 5000; // how long "Train over" stays up
 const TRAIN_PEAK_LEVEL = 5; // full speed from this level up
 
+// The train's total for "Train over": "1 sub", "12 subs".
+function subsText(n) {
+  return `${n} sub${n === 1 ? '' : 's'}`;
+}
+
 // How many subs an event adds to the train. A gift bomb counts once, from its first event; the gifts that follow don't.
 function trainSubs(listener, event) {
   if (listener !== 'subscriber-latest' || !event || event.isCommunityGift) return 0;
@@ -339,7 +344,7 @@ function renderTrain(nowMs) {
   setTrainText('.train__n', String(train.count));
   setTrainText('.train__level', `Level ${level}`);
   setTrainText('.train__label', over ? 'Train over' : 'Sub train');
-  setTrainText('.train__latest', over ? `${train.count} subs` : train.latest);
+  setTrainText('.train__latest', over ? subsText(train.count) : train.latest);
   setTrainText('.train__time', `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, '0')}`);
   trainPart('.train__timer i').style.width = `${over ? 0 : (left / (trainCfg().seconds * 1000)) * 100}%`;
 }
