@@ -1,6 +1,8 @@
 // Alerts: one strip at a time over the game for Twitch follows, subs, gift subs, cheers and raids, each with the
 // stream's picture in a badge and a sound. Follows get Rune burst, subs and gifts Poro party, cheers Card pull and
 // raids Rift. Follows that are waiting in the queue are merged into one strip; a gift bomb is one alert.
+// "!colors red blue" in chat, from the broadcaster or a moderator, sets the deck's colours here and in the game scene
+// (alone: back to the settings). It's saved in the StreamElements store and stays until the next one.
 
 const HOLD = { follow: 4000, bits: 5000, bitsFoil: 8000, sub: 6000, bigBomb: 8000, raid: 8000 };
 const BIG_BOMB = 10; // gift bombs this big hold longer
@@ -12,6 +14,8 @@ const EMOJI = {
   bomb: ['🎁', '🎉', '💥', '💜'],
 };
 const TIERS = { 1000: 'Just subscribed at tier 1', 2000: 'Just subscribed at tier 2', 3000: 'Just subscribed at tier 3', prime: 'Subscribed with Prime' };
+const COLOURS_KEY = 'rbColours'; // shared with the game-scene widget
+const COLOURS = { red: 'fury', orange: 'body', yellow: 'order', green: 'calm', blue: 'mind', purple: 'chaos' };
 
 // -- Decisions (pure, unit-tested in tests/alerts.test.js) ----------------
 
@@ -100,6 +104,33 @@ function takeNext(queue) {
   };
 }
 
+// -- Colours command (the same as the game scene's; unit-tested in tests/colours-and-title.test.js) --------
+
+// What "!colors red blue" (or !colours) asks for: the two domains, both '' to go back to the widget's settings (the
+// command on its own), or null if it isn't a colours command with two known colours.
+function coloursCommand(text) {
+  const [command, ...words] = text.trim().toLowerCase().split(/\s+/);
+  if (command !== '!colors' && command !== '!colours') return null;
+  if (!words.length) return { primary: '', secondary: '' };
+  if (words.length !== 2 || !words.every((w) => Object.hasOwn(COLOURS, w))) return null;
+  return { primary: COLOURS[words[0]], secondary: COLOURS[words[1]] };
+}
+
+// The colours the last !colors saved, or the widget's settings when it saved none.
+function coloursToShow(saved, fields) {
+  const domains = Object.values(COLOURS);
+  if (saved && domains.includes(saved.primary) && domains.includes(saved.secondary)) return { primary: saved.primary, secondary: saved.secondary };
+  return { primary: fields.primary, secondary: fields.secondary };
+}
+
+function canControl(data) {
+  const types = (data.badges || []).map((b) => b.type);
+  const tags = data.tags || {};
+  const yt = data.authorDetails || {};
+  return types.includes('broadcaster') || types.includes('moderator') || tags.mod === '1' ||
+    /(^|,)broadcaster\//.test(tags.badges || '') || yt.isChatOwner || yt.isChatModerator;
+}
+
 // -- On screen ------------------------------------------------------------
 
 const EXIT_MS = 460; // the strip's exit animation
@@ -115,6 +146,26 @@ let busy = false; // an alert is showing, leaving, or about to show
 let current = null; // the alert on screen, until it starts leaving
 let holdTimer = null;
 let muted = false; // the activity feed's mute button
+let savedColours = null; // what the last !colors saved
+const seenMessages = [];
+
+function renderColours() {
+  Object.assign(document.getElementById('alerts').dataset, coloursToShow(savedColours, fields));
+}
+
+function onChat(data) {
+  if (!data || typeof data.text !== 'string' || data.text[0] !== '!') return;
+  if (data.msgId) {
+    if (seenMessages.includes(data.msgId)) return;
+    seenMessages.push(data.msgId);
+    if (seenMessages.length > 50) seenMessages.shift();
+  }
+  const colours = canControl(data) && coloursCommand(data.text);
+  if (!colours) return;
+  savedColours = colours;
+  if (window.SE_API) SE_API.store.set(COLOURS_KEY, colours);
+  renderColours();
+}
 
 // Called as each alert appears: plays its sound unless alerts are muted.
 function onAlertShown(alert) {
@@ -387,10 +438,13 @@ window.addEventListener('onWidgetLoad', (obj) => {
   requestAnimationFrame(frame);
   ready = Promise.all(FONTS.map((f) => document.fonts.load(f))).catch(() => {});
   runQueue();
+  Promise.resolve(window.SE_API && SE_API.store.get(COLOURS_KEY))
+    .then((saved) => { savedColours = saved; renderColours(); }, () => {});
 });
 
 window.addEventListener('onEventReceived', (obj) => {
   const { listener, event } = obj.detail || {};
+  if (listener === 'message') return onChat(event && event.data);
   if (listener === 'event:skip') return leaveAlert();
   if (listener === 'alertService:toggleSound') { muted = nextMuted(muted, event); return; }
   const alert = describeEvent(listener, event, fields);

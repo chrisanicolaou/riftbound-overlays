@@ -6,7 +6,7 @@ The backdrop is the design system's shatter Backdrop: the deck's two colours as 
 
 The bar, left to right:
 
-- **Title:** a deck name ("Kai'Sa") or a stream title ("Kai'Sa coaching from willwin"). Long titles shrink from 44px to 32px to fit, up to about 45 characters.
+- **Title:** a deck name ("Kai'Sa") or a stream title ("Kai'Sa coaching from willwin"), set in the settings or with `!title`. Long titles shrink from 44px to 32px to fit, up to about 45 characters.
 - **Current opponent:** e.g. "Renekton". Hidden until set.
 - **Ticker:** your info lines plus the latest follower, sub and raid, one every N seconds. A new follower, sub or raid shows straight away. Events are Twitch only.
 - **Record:** the stream's wins and losses.
@@ -46,8 +46,14 @@ From you or a moderator, in Twitch chat (ProChat can send them). StreamElements 
 | `!reset` | sets the record back to 0–0 |
 | `!vs Renekton` | sets the current opponent |
 | `!vs` | hides the current opponent |
+| `!colors red blue` (or `!colours`) | sets the deck's two colours, here and in the alerts widget: red, orange, yellow, green, blue or purple |
+| `!colors` | goes back to the Primary / Secondary settings |
+| `!title Kai'Sa coaching from willwin` | sets the bar title (up to 60 characters) |
+| `!title` | goes back to the bar title setting |
 
 The record and opponent are saved in StreamElements, so they survive reloads. They start fresh when nothing has changed for 6 hours (the "fresh record" setting), so each stream starts at 0–0.
+
+Colours and title are saved too, but they stay until the next `!colors` or `!title`. While they're set, editing the colour or title settings in StreamElements changes nothing; send `!colors` or `!title` on its own to go back to the settings.
 
 ## OBS scene, top to bottom
 

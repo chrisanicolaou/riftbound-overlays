@@ -2,19 +2,27 @@
 // Chat commands, from the broadcaster or a moderator:
 //   !win  !loss  !undo  !reset        record
 //   !vs Renekton                      current opponent (!vs alone clears it)
+//   !colors red blue                  the deck's colours, here and in the alerts widget (alone: back to the settings)
+//   !title Kai'Sa                     the bar title (alone: back to the setting)
 // The record and opponent are saved in the StreamElements store, so they survive reloads.
-// They start fresh once nothing has changed for `resetHours`.
+// They start fresh once nothing has changed for `resetHours`. Colours and title are saved too, and stay until the next
+// command.
 // Sub train: every sub, resub and gift sub (a gift bomb counts all its subs) adds to a train that takes the ticker's
 // place in the bar from its `trainShowFrom`th sub. Each sub refills its `trainSeconds` timer; every `trainLevelEvery`
 // subs is a level, and the train picks up speed up to level 5. When the timer runs out it shows "Train over" for
 // 5 seconds and the ticker comes back. The train is saved in the store too, so a reload mid-train keeps it.
 
 const STORE_KEY = 'rbGameScene';
+const COLOURS_KEY = 'rbColours'; // shared with the alerts widget
+const TITLE_KEY = 'rbTitle';
+const COLOURS = { red: 'fury', orange: 'body', yellow: 'order', green: 'calm', blue: 'mind', purple: 'chaos' };
 const LATEST = { 'follower-latest': 'follower', 'subscriber-latest': 'sub', 'raid-latest': 'raid' };
 const LATEST_LABELS = { follower: 'Latest follower', sub: 'Latest sub', raid: 'Latest raid' };
 
 let fields = {};
 let state = { results: [], vs: '', updated: 0 };
+let savedColours = null; // what the last !colors saved
+let savedTitle = null; // what the last !title saved
 const latest = { follower: '', sub: '', raid: '' };
 const seenMessages = [];
 let tickerIndex = -1;
@@ -105,6 +113,51 @@ function canControl(data) {
     /(^|,)broadcaster\//.test(tags.badges || '') || yt.isChatOwner || yt.isChatModerator;
 }
 
+// -- Colours and title ----------------------------------------------------
+
+// What "!colors red blue" (or !colours) asks for: the two domains, both '' to go back to the widget's settings (the
+// command on its own), or null if it isn't a colours command with two known colours.
+function coloursCommand(text) {
+  const [command, ...words] = text.trim().toLowerCase().split(/\s+/);
+  if (command !== '!colors' && command !== '!colours') return null;
+  if (!words.length) return { primary: '', secondary: '' };
+  if (words.length !== 2 || !words.every((w) => Object.hasOwn(COLOURS, w))) return null;
+  return { primary: COLOURS[words[0]], secondary: COLOURS[words[1]] };
+}
+
+// The colours the last !colors saved, or the widget's settings when it saved none.
+function coloursToShow(saved, fields) {
+  const domains = Object.values(COLOURS);
+  if (saved && domains.includes(saved.primary) && domains.includes(saved.secondary)) return { primary: saved.primary, secondary: saved.secondary };
+  return { primary: fields.primary, secondary: fields.secondary };
+}
+
+// What "!title ..." asks for: the new bar title, '' to go back to the widget's setting, or null if it isn't !title.
+function titleCommand(text) {
+  const trimmed = text.trim();
+  const command = trimmed.split(/\s+/)[0].toLowerCase();
+  return command === '!title' ? trimmed.slice(command.length).trim().slice(0, 60) : null;
+}
+
+function titleToShow(saved, fields) {
+  return saved && typeof saved.title === 'string' && saved.title ? saved.title : fields.barTitle || '';
+}
+
+function renderLook() {
+  Object.assign(scene().dataset, coloursToShow(savedColours, fields));
+  setText('bar-title', titleToShow(savedTitle, fields));
+  fitTitle();
+}
+
+async function loadLook() {
+  try {
+    savedColours = window.SE_API && await SE_API.store.get(COLOURS_KEY);
+    savedTitle = window.SE_API && await SE_API.store.get(TITLE_KEY);
+  } catch (e) { /* nothing saved yet */ }
+}
+
+// -- Chat commands ----------------------------------------------------------
+
 function onChat(data) {
   if (!data || typeof data.text !== 'string' || data.text[0] !== '!') return;
   if (data.msgId) {
@@ -114,6 +167,15 @@ function onChat(data) {
   }
   if (!canControl(data)) return;
   const text = data.text.trim();
+  const colours = coloursCommand(text);
+  const title = titleCommand(text);
+  if (colours || title !== null) {
+    if (colours) savedColours = colours;
+    else savedTitle = { title };
+    if (window.SE_API) SE_API.store.set(colours ? COLOURS_KEY : TITLE_KEY, colours || savedTitle);
+    renderLook();
+    return;
+  }
   const command = text.split(/\s+/)[0].toLowerCase();
   if (!['!win', '!loss', '!undo', '!reset', '!vs'].includes(command)) return;
   freshIfStale();
@@ -470,10 +532,10 @@ function startTrain() {
 
 window.addEventListener('onWidgetLoad', async (obj) => {
   fields = obj.detail.fieldData || {};
-  setText('bar-title', fields.barTitle);
-  fitTitle();
+  renderLook();
   document.fonts.ready.then(fitTitle);
   watchHoles();
+  loadLook().then(renderLook);
 
   const session = (obj.detail.session && obj.detail.session.data) || {};
   Object.keys(LATEST).forEach((listener) => { latest[LATEST[listener]] = latestText(listener, session[listener]); });

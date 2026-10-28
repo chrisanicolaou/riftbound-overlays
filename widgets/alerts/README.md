@@ -50,6 +50,10 @@ The alerts live inside the game scene's overlay, so there's no new Browser Sourc
 
 The activity feed's "skip alert" button ends the strip on screen, and its "mute alerts" button silences the sound.
 
+## Chat command
+
+`!colors red blue` (or `!colours`) from you or a moderator in Twitch chat sets the deck's colours here and in the game scene at once: red, orange, yellow, green, blue or purple. It's saved in StreamElements and stays until the next `!colors`, so editing the Primary / Secondary settings changes nothing meanwhile. `!colors` on its own goes back to the settings.
+
 ## Testing
 
 In the StreamElements editor, use the emulate buttons for follows, subs, gifts, cheers and raids.
