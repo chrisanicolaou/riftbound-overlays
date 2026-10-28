@@ -27,6 +27,25 @@
     "step": 100,
     "group": "Look"
   },
+  "alertSound": {
+    "type": "sound-input",
+    "label": "Alert sound (every alert)",
+    "value": "",
+    "group": "Sound"
+  },
+  "followSound": { "type": "sound-input", "label": "Follow sound (blank = alert sound)", "value": "", "group": "Sound" },
+  "subSound": { "type": "sound-input", "label": "Sub and gift sound (blank = alert sound)", "value": "", "group": "Sound" },
+  "bitsSound": { "type": "sound-input", "label": "Cheer sound (blank = alert sound)", "value": "", "group": "Sound" },
+  "raidSound": { "type": "sound-input", "label": "Raid sound (blank = alert sound)", "value": "", "group": "Sound" },
+  "volume": {
+    "type": "slider",
+    "label": "Volume",
+    "value": 80,
+    "min": 0,
+    "max": 100,
+    "step": 5,
+    "group": "Sound"
+  },
   "centreX": {
     "type": "number",
     "label": "Strip centre, x (px)",

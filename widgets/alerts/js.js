@@ -62,6 +62,18 @@ function describeEvent(listener, event, fields) {
   return null;
 }
 
+// The sound for an alert: its kind's own sound if one is set, else the main alert sound ('' for none).
+const SOUND_FIELD = { follow: 'followSound', sub: 'subSound', resub: 'subSound', gift: 'subSound', bomb: 'subSound', bits: 'bitsSound', raid: 'raidSound' };
+function soundFor(kind, fields) {
+  const own = String(fields[SOUND_FIELD[kind]] || '').trim();
+  return own || String(fields.alertSound || '').trim();
+}
+
+// The activity feed's mute button: use the state it sends if it sends one, else flip.
+function nextMuted(current, event) {
+  return event && typeof event.muted === 'boolean' ? event.muted : !current;
+}
+
 // The next alert to show. A follow at the front takes every other waiting follow with it, as one strip.
 function takeNext(queue) {
   if (!queue.length) return { alert: null, rest: [] };
@@ -90,9 +102,16 @@ let ready = null; // resolves once the widget has loaded and its fonts are in
 let busy = false; // an alert is showing, leaving, or about to show
 let current = null; // the alert on screen, until it starts leaving
 let holdTimer = null;
+let muted = false; // the activity feed's mute button
 
-// Called as each alert appears. The sound plays from here.
-function onAlertShown(alert) {}
+// Called as each alert appears: plays its sound unless alerts are muted.
+function onAlertShown(alert) {
+  const url = soundFor(alert.kind, fields);
+  if (muted || !url) return;
+  const sound = new Audio(url);
+  sound.volume = clamp(num(fields.volume, 80) / 100, 0, 1);
+  sound.play().catch(() => {}); // a browser may block sound until the page is clicked; OBS doesn't
+}
 
 const num = (v, fallback) => (v !== '' && v != null && Number.isFinite(Number(v)) ? Number(v) : fallback);
 const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
@@ -342,6 +361,8 @@ window.addEventListener('onWidgetLoad', (obj) => {
 
 window.addEventListener('onEventReceived', (obj) => {
   const { listener, event } = obj.detail || {};
+  if (listener === 'event:skip') return leaveAlert();
+  if (listener === 'alertService:toggleSound') { muted = nextMuted(muted, event); return; }
   const alert = describeEvent(listener, event, fields);
   if (alert) { queue.push(alert); runQueue(); }
 });

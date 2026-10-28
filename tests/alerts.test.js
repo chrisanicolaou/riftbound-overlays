@@ -68,3 +68,18 @@ test('takeNext keeps order across a mixed burst', () => {
   assert.deepEqual(shown, ['r', 'f0 and 19 others', 's1', 's2']);
 });
 test('takeNext on an empty queue', () => assert.deepEqual(w.takeNext([]), { alert: null, rest: [] }));
+
+test('soundFor picks the kind sound, else the main one', () => {
+  const fields = { alertSound: 'main.wav', subSound: 'sub.wav', raidSound: '' };
+  assert.equal(w.soundFor('bomb', fields), 'sub.wav');
+  assert.equal(w.soundFor('resub', fields), 'sub.wav');
+  assert.equal(w.soundFor('raid', fields), 'main.wav');
+  assert.equal(w.soundFor('follow', fields), 'main.wav');
+  assert.equal(w.soundFor('bits', {}), '');
+});
+test('nextMuted uses the event when it says, else toggles', () => {
+  assert.equal(w.nextMuted(false, { muted: true }), true);
+  assert.equal(w.nextMuted(true, { muted: false }), false);
+  assert.equal(w.nextMuted(false, {}), true);
+  assert.equal(w.nextMuted(true, undefined), false);
+});
