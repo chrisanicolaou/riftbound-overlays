@@ -29,7 +29,7 @@ A strip over the top of the game for every Twitch follow, sub, gift sub, cheer a
 
 ### Making a quiet sound loud enough
 
-Run `python -m http.server 8765` in the repo root and open `http://localhost:8765/tools/boost-sound.html`. Pick the sound and download the WAV it makes, which peaks at -1 dBFS. Upload that WAV to "Alert sound". The booster runs in the browser and uploads nothing. Don't commit sound files to this repo.
+Run `python -m http.server 8765` in the repo root and open `http://localhost:8765/tools/boost-sound.html`. Pick the sound and download the MP3 it makes, which peaks at -1 dBFS. Upload that MP3 to "Alert sound" (StreamElements doesn't take WAVs). The booster runs in the browser and uploads nothing. Don't commit sound files to this repo.
 
 ## OBS
 

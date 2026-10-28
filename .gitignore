@@ -3,6 +3,7 @@ preview/avatar.png
 preview/alert-sound.*
 preview/game-sample.webp
 *.wav
+*.mp3
 
 # Scratch space for planning tools.
 .superpowers/

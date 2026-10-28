@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <title>Sound booster</title>
 <!-- Makes a quiet alert sound loud enough to upload to StreamElements: scales it so its loudest moment peaks at -1 dBFS
-     and saves it as a 16-bit WAV with the same channels (at the browser's audio rate, usually 48kHz, since decoding
-     resamples to it). Nothing is uploaded anywhere; the browser does
-     the work. Serve the repo root (python -m http.server 8765), open /tools/boost-sound.html and pick a file (any
-     format the browser can play, e.g. mp3, mp4/m4a, ogg, wav). ?src=<url> loads a file from the server instead. -->
+     and saves it as a 192 kbps, 44.1kHz MP3 (StreamElements doesn't take WAVs), mono or stereo like the original. The
+     MP3 encoder (lamejs) loads from jsDelivr; nothing is uploaded anywhere, the browser does the work. Serve the repo
+     root (python -m http.server 8765), open /tools/boost-sound.html and pick a file (any format the browser can play,
+     e.g. mp3, mp4/m4a, ogg, wav). ?src=<url> loads a file from the server instead. -->
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"
+  integrity="sha384-xuasJXVcyv3hZq0eYpelEkBC8l4yufatZXDsKuyCU2rqfhDCb+ftuE/mSfZAteiK" crossorigin="anonymous"></script>
 <style>
   html, body { margin: 0; background: #1b1b1b; color: #ddd; font: 14px/1.4 system-ui, sans-serif; }
   main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
@@ -21,13 +23,14 @@
 <body>
 <main>
   <h1>Sound booster</h1>
-  <p>Pick a sound. It comes back as a WAV whose loudest moment peaks at -1 dBFS, ready to upload to the alert widget.</p>
+  <p>Pick a sound. It comes back as an MP3 whose loudest moment peaks at -1 dBFS, ready to upload to the alert widget.</p>
   <p><input type="file" id="file" accept="audio/*,video/mp4"></p>
   <p>Length: <output id="length">–</output>, peak before: <output id="before">–</output>, after: <output id="after">–</output></p>
   <p id="result"></p>
 </main>
 <script>
 const TARGET = 10 ** (-1 / 20); // -1 dBFS, about 0.891
+const RATE = 44100, KBPS = 192;
 const dbfs = (peak) => (peak > 0 ? `${(20 * Math.log10(peak)).toFixed(1)} dBFS` : 'silent');
 
 // The loudest sample across all channels, 0 to 1.
@@ -39,50 +42,45 @@ function peakOf(buffer) {
   return peak;
 }
 
-// A 16-bit PCM WAV of `buffer` with every sample multiplied by `gain`.
-function encodeWav(buffer, gain) {
-  const channels = buffer.numberOfChannels, rate = buffer.sampleRate, frames = buffer.length;
-  const data = frames * channels * 2;
-  const out = new DataView(new ArrayBuffer(44 + data));
-  const text = (at, s) => [...s].forEach((ch, i) => out.setUint8(at + i, ch.charCodeAt(0)));
-  text(0, 'RIFF'); out.setUint32(4, 36 + data, true); text(8, 'WAVE');
-  text(12, 'fmt '); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, channels, true);
-  out.setUint32(24, rate, true); out.setUint32(28, rate * channels * 2, true); out.setUint16(32, channels * 2, true); out.setUint16(34, 16, true);
-  text(36, 'data'); out.setUint32(40, data, true);
-  const samples = [...Array(channels)].map((_, ch) => buffer.getChannelData(ch));
-  let at = 44;
-  for (let i = 0; i < frames; i++) {
-    for (let ch = 0; ch < channels; ch++) {
-      const v = Math.max(-1, Math.min(1, samples[ch][i] * gain));
-      out.setInt16(at, v < 0 ? v * 0x8000 : v * 0x7fff, true);
-      at += 2;
-    }
-  }
-  return out.buffer;
+// An MP3 of `buffer` with every sample multiplied by `gain`. MP3 holds one or two channels, so any past two are dropped.
+function encodeMp3(buffer, gain) {
+  const channels = Math.min(buffer.numberOfChannels, 2);
+  const pcm = [...Array(channels)].map((_, ch) => Int16Array.from(buffer.getChannelData(ch), (v) => {
+    const s = Math.max(-1, Math.min(1, v * gain));
+    return s < 0 ? s * 0x8000 : s * 0x7fff;
+  }));
+  const encoder = new lamejs.Mp3Encoder(channels, buffer.sampleRate, KBPS);
+  const parts = [];
+  for (let i = 0; i < buffer.length; i += 1152) parts.push(encoder.encodeBuffer(...pcm.map((c) => c.subarray(i, i + 1152))));
+  parts.push(encoder.flush());
+  return new Blob(parts, { type: 'audio/mpeg' });
 }
 
-// Decodes, boosts and offers the download. Kept on window for checking from the console.
+// Decodes, boosts and offers the download. "After" is measured on the MP3 itself, decoded again. Kept on window for
+// checking from the console.
 async function boost(data, name) {
   const result = document.getElementById('result');
   result.textContent = '';
   try {
-    const buffer = await new AudioContext().decodeAudioData(data);
+    if (!window.lamejs) throw new Error("the MP3 encoder didn't load from cdn.jsdelivr.net. Check the connection and reload.");
+    const ctx = new AudioContext({ sampleRate: RATE });
+    const buffer = await ctx.decodeAudioData(data);
     const peak = peakOf(buffer);
-    if (!peak) throw new Error('That file is silent.');
-    const gain = TARGET / peak;
-    const wav = encodeWav(buffer, gain);
+    if (!peak) throw new Error('that file is silent.');
+    const mp3 = encodeMp3(buffer, TARGET / peak);
+    const after = peakOf(await ctx.decodeAudioData(await mp3.arrayBuffer()));
     document.getElementById('length').textContent = `${buffer.duration.toFixed(2)}s`;
     document.getElementById('before').textContent = dbfs(peak);
-    document.getElementById('after').textContent = dbfs(peak * gain);
+    document.getElementById('after').textContent = dbfs(after);
     const link = Object.assign(document.createElement('a'), {
-      className: 'download', href: URL.createObjectURL(new Blob([wav], { type: 'audio/wav' })),
-      download: `${name.replace(/\.[^.]+$/, '')} (boosted).wav`, textContent: 'Download the boosted WAV',
+      className: 'download', href: URL.createObjectURL(mp3),
+      download: `${name.replace(/\.[^.]+$/, '')} (boosted).mp3`, textContent: 'Download the boosted MP3',
     });
     result.append(link);
-    window.lastWav = wav;
+    window.lastMp3 = mp3;
   } catch (err) {
     result.innerHTML = '';
-    result.append(Object.assign(document.createElement('span'), { className: 'error', textContent: `Couldn't read that file: ${err.message}` }));
+    result.append(Object.assign(document.createElement('span'), { className: 'error', textContent: `Couldn't boost that file: ${err.message}` }));
   }
 }
 
