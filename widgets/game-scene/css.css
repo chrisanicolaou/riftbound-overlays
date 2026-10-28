@@ -76,7 +76,8 @@ html, body { margin: 0; }
 .train__progress { --glow: transparent; position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; border-radius: inherit; box-shadow: 0 0 16px var(--glow);
   transition: width 600ms cubic-bezier(.2, .8, .2, 1), box-shadow 600ms; }
 .train__grad { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--primary-500), var(--secondary-500)); }
-.train__ticks { position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(90deg, transparent 0 calc(20% - 2px), var(--night-950) calc(20% - 2px) 20%); }
+.train__ticks { --step: calc(100% / var(--every, 5)); position: absolute; inset: 0; border-radius: inherit;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(var(--step) - 2px), var(--night-950) calc(var(--step) - 2px) var(--step)); }
 .train__loco { position: absolute; z-index: 1; top: 50%; left: 0; font-size: 30px; line-height: 1; transform: translate(-50%, -62%) scaleX(-1);
   transition: left 600ms cubic-bezier(.2, .8, .2, 1); animation: rattle calc(.8s - var(--hype) * .6s) ease-in-out infinite; }
 @keyframes rattle { 25% { transform: translate(-50%, -70%) scaleX(-1) rotate(4deg); } 75% { transform: translate(-50%, -58%) scaleX(-1) rotate(-3deg); } }

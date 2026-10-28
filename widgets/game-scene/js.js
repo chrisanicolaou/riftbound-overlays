@@ -335,6 +335,8 @@ function renderTrain(nowMs) {
   el.classList.toggle('is-low', !over && left <= TRAIN_LOW_MS);
   const hype = String(over ? 0 : trainHype(level));
   if (el.style.getPropertyValue('--hype') !== hype) el.style.setProperty('--hype', hype);
+  const every = String(trainCfg().every); // one divider per sub in a level
+  if (el.style.getPropertyValue('--every') !== every) el.style.setProperty('--every', every);
   // The gradient spans the whole track, which narrows when the count gets more digits or the opponent shows.
   const trackWidth = `${trainPart('.train__track').offsetWidth}px`;
   if (trainPart('.train__grad').style.width !== trackWidth) trainPart('.train__grad').style.width = trackWidth;
