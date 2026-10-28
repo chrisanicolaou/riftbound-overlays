@@ -27,6 +27,17 @@
 
     <div class="bar__section bar__ticker" id="ticker" hidden>
       <div class="ticker__item" id="ticker-item"></div>
+      <!-- Sub train: takes the ticker's place while a run of subs is going. Speed lines stream past behind it. -->
+      <canvas class="train__lines" id="train-lines"></canvas>
+      <div class="train" id="train" hidden>
+        <div class="train__count"><small>×</small><span class="train__n"></span></div>
+        <div class="train__main">
+          <div class="train__row"><span class="train__label">Sub train</span><span class="train__level"></span></div>
+          <div class="train__track"><div class="train__progress"><i class="train__grad"></i></div><i class="train__ticks"></i><span class="train__loco">🚂</span></div>
+          <div class="train__timer"><i></i></div>
+          <div class="train__row"><span class="train__latest"></span><span class="train__time"></span></div>
+        </div>
+      </div>
     </div>
 
     <div class="bar__section bar__record" aria-label="Record">
@@ -34,4 +45,7 @@
       <span class="stat record__count" id="losses">0</span><span class="rb-eyebrow record__letter">L</span>
     </div>
   </section>
+
+  <!-- The sub train's sparks and steam, free to spill out of the bar. -->
+  <canvas id="train-fx" width="1920" height="1080"></canvas>
 </div>

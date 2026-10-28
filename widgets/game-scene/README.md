@@ -11,6 +11,21 @@ The bar, left to right:
 - **Ticker:** your info lines plus the latest follower, sub and raid, one every N seconds. A new follower, sub or raid shows straight away. Events are Twitch only.
 - **Record:** the stream's wins and losses.
 
+## Sub train
+
+When subs come in a run, the ticker's slot becomes a sub train. The ticker pauses meanwhile and picks up again afterwards.
+
+- **What counts:** every sub, resub and gift sub adds one. A gift bomb adds all its subs at once.
+- **Timer:** the train appears from the 2nd sub. Each new sub refills its timer (2 minutes by default), which drains under the track and blinks for its last 10 seconds.
+- **Levels:** every 5 subs is a level, shown on the right.
+  - The track fills toward the next level, from the deck's primary colour to its secondary, with a mark for each sub. The 🚂 rides the front.
+  - On a level-up the track runs to the end and bursts there, then starts the next level from empty.
+- **Full steam:** the train picks up speed with each level, up to level 5. The engine steams and rattles faster, and from level 2 speed lines stream past behind it.
+- **Ending:** when the timer runs out, the train shows "Train over" with its total for 5 seconds, then the ticker comes back. A sub after that starts a new train.
+- **Reloads:** the train is saved in StreamElements, so reloading the Browser Source mid-train keeps it.
+
+The emoji and the loops while a train runs are a deliberate departure from the design system.
+
 ## StreamElements
 
 1. Create a 1920×1080 overlay and add a Custom Widget. Set the widget to position 0,0 and size 1920×1080.
@@ -18,6 +33,7 @@ The bar, left to right:
 3. In the widget's settings:
    - Type the bar title, and pick the deck's Primary / Secondary domains. The domains only set the overlay's colours.
    - Write the ticker lines as `Label: text`, separated by `|`. For example: `YouTube: @handle | Deck list: type !deck in chat`.
+   - Under "Sub train", choose whether to show it, how many seconds each sub keeps it going (default 120), how many subs before it appears (2) and how many subs make a level (5).
 
 ## Chat commands
 
@@ -60,4 +76,6 @@ Names keep each viewer's platform colour. ProChat can't change that.
 
 ## Preview
 
-Run `python -m http.server 8765` in the repo root, then open `http://localhost:8765/preview/?w=game-scene&primary=calm&secondary=order`. Any field can go in the query string. Chat in the preview is a mock of ProChat with made-up messages. In the browser console, `sendChat("!win")` sends a command as the broadcaster, and `sendEvent("follower-latest", { name: "someone" })` fires an event.
+Run `python -m http.server 8765` in the repo root, then open `http://localhost:8765/preview/?w=game-scene&primary=calm&secondary=order`. Any field can go in the query string, so add `&trainSeconds=15` to watch a sub train end quickly. Chat in the preview is a mock of ProChat with made-up messages. In the browser console, `sendChat("!win")` sends a command as the broadcaster, and `sendEvent("follower-latest", { name: "someone" })` fires an event.
+
+To start a sub train, send two or more subs: `sendEvent("subscriber-latest", { name: "someone", amount: 1 })`. A gift bomb is `sendEvent("subscriber-latest", { bulkGifted: true, sender: "someone", amount: 50 })`. The unit tests for the train's counting and timing run with `node --test tests/game-scene-train.test.js`.

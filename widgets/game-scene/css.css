@@ -44,3 +44,53 @@ html, body { margin: 0; }
 .bar__record { flex: none; margin-left: auto; display: flex; align-items: baseline; gap: var(--space-2); }
 .record__count { color: var(--ink); font-variant-numeric: tabular-nums; }
 .record__letter:not(:last-child) { margin-right: var(--space-4); }
+
+/* Sub train: takes the ticker's place while a run of subs is going (the ticker pauses). The count punches in on each
+   sub, the track fills toward the next level from the primary colour to the secondary, and from level 2 the train
+   picks up speed: the engine steams and rattles faster, and speed lines stream past behind it. These departures from
+   the design system (emoji, loops while the train runs) are on purpose. */
+.bar__ticker { align-self: stretch; display: flex; align-items: center; }
+.ticker__item { flex: 1; min-width: 0; }
+.train-on #ticker-item { display: none; }
+#train-fx { inset: 0; pointer-events: none; }
+.train__lines { position: absolute; left: var(--space-6); top: 0; width: calc(100% - var(--space-6)); height: 100%; pointer-events: none; }
+
+.train { --hype: 0; position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-6);
+  animation: train-in 420ms cubic-bezier(.2, .8, .2, 1) both; }
+.train.is-leaving { animation: train-out 500ms ease-in both; }
+@keyframes train-in { from { opacity: 0; transform: translateY(10px); } }
+@keyframes train-out { to { opacity: 0; transform: translateY(10px); } }
+
+.train__count { flex: none; font: 400 76px/76px var(--font-display); color: var(--primary-300); text-shadow: 0 0 24px var(--primary-glow); font-variant-numeric: tabular-nums; transform-origin: 50% 60%; }
+.train__count small { font-size: .55em; margin-right: .05em; }
+.train__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.train__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.train__label { font: 400 20px/22px var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--primary-300); }
+.train__level { flex: none; padding: 3px 10px 1px; border-radius: 999px; background: var(--primary-wash); color: var(--primary-100); font: 400 20px/22px var(--font-display); letter-spacing: .08em; }
+.train__latest { font: 600 18px/24px var(--font-text); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.train__time { font: 600 18px/24px var(--font-text); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+/* Level track: the gradient spans the whole track and the fill uncovers it, so the leading edge turns from primary to
+   secondary as the next level nears. Dividers mark each sub; the engine rides the leading edge in front of them. */
+.train__track { position: relative; height: 14px; margin-top: 4px; border-radius: 999px; background: var(--night-800); box-shadow: inset 0 0 0 1px var(--line); }
+.train__progress { --glow: transparent; position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; border-radius: inherit; box-shadow: 0 0 16px var(--glow);
+  transition: width 600ms cubic-bezier(.2, .8, .2, 1), box-shadow 600ms; }
+.train__grad { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--primary-500), var(--secondary-500)); }
+.train__ticks { position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(90deg, transparent 0 calc(20% - 2px), var(--night-950) calc(20% - 2px) 20%); }
+.train__loco { position: absolute; z-index: 1; top: 50%; left: 0; font-size: 30px; line-height: 1; transform: translate(-50%, -62%) scaleX(-1);
+  transition: left 600ms cubic-bezier(.2, .8, .2, 1); animation: rattle calc(.8s - var(--hype) * .6s) ease-in-out infinite; }
+@keyframes rattle { 25% { transform: translate(-50%, -70%) scaleX(-1) rotate(4deg); } 75% { transform: translate(-50%, -58%) scaleX(-1) rotate(-3deg); } }
+.no-anim, .no-anim ~ .train__loco { transition: none !important; }
+
+/* Timer: a thin line under the track that drains, blinking for the last 10 seconds. */
+.train__timer { position: relative; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, .08); }
+.train__timer i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--ink-muted); }
+.train.is-low .train__timer i, .train.is-low .train__time { animation: train-low 700ms ease-in-out infinite alternate; }
+@keyframes train-low { to { opacity: .3; } }
+.train.is-over .train__timer, .train.is-over .train__time, .train.is-over .train__loco { opacity: 0; transition: opacity 300ms; }
+
+.train .is-punch { animation: train-punch 520ms cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes train-punch { from { transform: scale(1.6) rotate(-5deg); } }
+.train.is-levelup .train__level { animation: train-level 900ms ease-out; }
+@keyframes train-level { 0%, 40% { background: var(--secondary-300); color: var(--night-950); box-shadow: 0 0 24px var(--secondary-glow); } }
+@media (prefers-reduced-motion: reduce) { .train, .train__loco, .train .is-punch, .train.is-levelup .train__level { animation: none; } }

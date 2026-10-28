@@ -161,16 +161,17 @@ function showTickerItem(item) {
 
 function advanceTicker(jumpTo) {
   const items = tickerItems();
-  document.getElementById('ticker').hidden = !items.length;
+  document.getElementById('ticker').hidden = !items.length && !trainShowing;
   if (!items.length) return;
   const jump = jumpTo ? items.findIndex((item) => item.key === jumpTo) : -1;
   tickerIndex = jump >= 0 ? jump : (tickerIndex + 1) % items.length;
   showTickerItem(items[tickerIndex]);
 }
 
-// Shows the next line now (or the line for `jumpTo`), then rotates.
+// Shows the next line now (or the line for `jumpTo`), then rotates. Paused while the sub train shows.
 function startTicker(jumpTo) {
   clearInterval(tickerTimer);
+  if (trainShowing) return;
   advanceTicker(jumpTo);
   if (tickerItems().length > 1) {
     tickerTimer = setInterval(() => advanceTicker(), Math.max(5, Number(fields.tickerSeconds) || 20) * 1000);
@@ -230,6 +231,234 @@ function restoreTrain(saved, nowMs) {
   return nowMs < saved.endsAt ? { count: saved.count, latest: saved.latest, endsAt: saved.endsAt } : null;
 }
 
+// -- Sub train: on screen -------------------------------------------------
+
+const TRAIN_KEY = 'rbSubTrain';
+const TRAIN_LOW_MS = 10000; // the timer blinks for the last 10 seconds
+
+let train = null;
+let trainShowing = false;
+let trainLive = false;
+let trainProgressTimer = null;
+let trainCtxs = null;
+let trainLast = 0;
+const trainParts = [];
+const trainAcc = { line: 0, puff: 0 };
+
+function fieldNumber(value, fallback, min) {
+  const n = Number(value);
+  return value !== '' && value != null && Number.isFinite(n) ? Math.max(min, n) : fallback;
+}
+
+function trainCfg() {
+  return { seconds: fieldNumber(fields.trainSeconds, 120, 5), every: fieldNumber(fields.trainLevelEvery, 5, 1), showFrom: fieldNumber(fields.trainShowFrom, 2, 1) };
+}
+
+const trainPart = (sel) => document.getElementById('train').querySelector(sel);
+const scene = () => document.querySelector('.scene');
+
+// Position of an element inside `root`, from layout offsets (unaffected by transforms or the StreamElements editor's scaling).
+function posIn(node, root) {
+  let x = 0, y = 0;
+  for (let n = node; n && n !== root; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+  return { x, y };
+}
+
+function deckColours() {
+  const cs = getComputedStyle(scene());
+  const col = (v) => cs.getPropertyValue(v).trim();
+  return { p3: col('--primary-300'), p5: col('--primary-500'), s3: col('--secondary-300'), s5: col('--secondary-500') };
+}
+const hexRgb = (hex) => [0, 2, 4].map((i) => parseInt(hex.replace('#', '').slice(i, i + 2), 16));
+const mixColour = (a, b, t) => { const A = hexRgb(a), B = hexRgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(', ')})`; };
+
+function setTrainText(sel, text) {
+  const n = trainPart(sel);
+  if (n.textContent !== text) n.textContent = text;
+}
+
+// The level track: fills toward the next level. On a level-up it runs to the end, then starts the next level from empty.
+function setTrack(frac) {
+  const prog = trainPart('.train__progress');
+  const c = deckColours();
+  prog.style.width = `${frac * 100}%`;
+  trainPart('.train__loco').style.left = `${frac * 100}%`;
+  prog.style.setProperty('--glow', frac > 0 ? mixColour(c.p5, c.s5, frac) : 'transparent');
+}
+function setProgress(levelUp) {
+  const every = trainCfg().every;
+  const frac = (train ? train.count % every : 0) / every;
+  clearTimeout(trainProgressTimer);
+  if (!levelUp) return setTrack(frac);
+  setTrack(1);
+  trainProgressTimer = setTimeout(() => {
+    const prog = trainPart('.train__progress');
+    prog.classList.add('no-anim');
+    setTrack(0);
+    void prog.offsetWidth;
+    prog.classList.remove('no-anim');
+    setTrack(frac);
+  }, 700);
+}
+
+// Shows, updates or hides the train for the time `nowMs`. Runs every frame, and every 250ms in case frames pause.
+function renderTrain(nowMs) {
+  const phase = fields.showTrain === false ? 'off' : trainPhase(train, nowMs, trainCfg());
+  const el = document.getElementById('train');
+  const showing = phase !== 'off';
+  trainLive = phase === 'live';
+  if (showing !== trainShowing) {
+    trainShowing = showing;
+    el.hidden = !showing;
+    scene().classList.toggle('train-on', showing);
+    if (showing) {
+      clearInterval(tickerTimer);
+      document.getElementById('ticker').hidden = false;
+      setProgress(false);
+    } else {
+      el.classList.remove('is-over', 'is-leaving', 'is-low', 'is-levelup');
+      startTicker();
+    }
+  }
+  if (!showing) return;
+
+  const over = phase === 'over';
+  const level = trainLevel(train.count, trainCfg().every);
+  const left = Math.max(0, train.endsAt - nowMs);
+  el.classList.toggle('is-over', over);
+  el.classList.toggle('is-leaving', over && nowMs >= train.endsAt + TRAIN_OVER_MS - 500);
+  el.classList.toggle('is-low', !over && left <= TRAIN_LOW_MS);
+  const hype = String(over ? 0 : trainHype(level));
+  if (el.style.getPropertyValue('--hype') !== hype) el.style.setProperty('--hype', hype);
+  // The gradient spans the whole track, which narrows when the count gets more digits or the opponent shows.
+  const trackWidth = `${trainPart('.train__track').offsetWidth}px`;
+  if (trainPart('.train__grad').style.width !== trackWidth) trainPart('.train__grad').style.width = trackWidth;
+  const lines = document.getElementById('train-lines');
+  if (lines.width !== lines.offsetWidth || lines.height !== lines.offsetHeight) { lines.width = lines.offsetWidth; lines.height = lines.offsetHeight; }
+
+  setTrainText('.train__n', String(train.count));
+  setTrainText('.train__level', `Level ${level}`);
+  setTrainText('.train__label', over ? 'Train over' : 'Sub train');
+  setTrainText('.train__latest', over ? `${train.count} subs` : train.latest);
+  setTrainText('.train__time', `${Math.floor(left / 60000)}:${String(Math.floor((left % 60000) / 1000)).padStart(2, '0')}`);
+  trainPart('.train__timer i').style.width = `${over ? 0 : (left / (trainCfg().seconds * 1000)) * 100}%`;
+}
+
+function addToTrain(n, name) {
+  const now = Date.now();
+  const wasShowing = trainShowing;
+  const result = trainAdd(train, n, name, now, trainCfg());
+  train = result.train;
+  if (window.SE_API) SE_API.store.set(TRAIN_KEY, train);
+  const el = document.getElementById('train');
+  el.classList.remove('is-over', 'is-leaving', 'is-levelup');
+  renderTrain(now);
+  if (!trainShowing) return;
+  setProgress(result.levelUp && wasShowing);
+  const count = trainPart('.train__count');
+  count.classList.remove('is-punch'); void count.offsetWidth; count.classList.add('is-punch');
+  if (result.levelUp) { void el.offsetWidth; el.classList.add('is-levelup'); }
+  trainBurst(n, result.levelUp);
+}
+
+// -- Sub train: sparks, steam and speed lines -----------------------------
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const addPart = (p) => trainParts.push({ age: 0, drag: 1, g: 0, vx: 0, vy: 0, layer: 'front', ...p });
+const TRAIN_DRAW = {
+  spark(x, p, k) {
+    x.globalAlpha = 1 - k; x.strokeStyle = p.color; x.lineCap = 'round'; x.lineWidth = p.w;
+    x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x - p.vx * p.tail, p.y - p.vy * p.tail); x.stroke();
+  },
+  ring(x, p, k) {
+    const e = 1 - (1 - k) ** 3;
+    x.globalAlpha = (1 - k) * .9; x.strokeStyle = p.color; x.lineWidth = Math.max(1, p.w * (1 - k));
+    x.beginPath(); x.arc(p.x, p.y, p.r0 + (p.r1 - p.r0) * e, 0, Math.PI * 2); x.stroke();
+  },
+  flash(x, p, k) {
+    const r = p.r * (.4 + .6 * (1 - (1 - k) ** 2));
+    x.globalAlpha = (1 - k) ** 2;
+    const g = x.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, '#ffffff'); g.addColorStop(.25, p.color); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill();
+  },
+  puff(x, p, k) {
+    const r = p.size * (.4 + k);
+    x.globalAlpha = (1 - k) * .3;
+    const g = x.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, '#ffffff'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(p.x, p.y, r, 0, Math.PI * 2); x.fill();
+  },
+  line(x, p, k) {
+    x.globalAlpha = p.alpha * Math.min(1, (1 - k) * 4); x.strokeStyle = p.color; x.lineWidth = p.w; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(p.x, p.y); x.lineTo(p.x + p.len, p.y); x.stroke();
+  },
+};
+function trainSparks(o, n, colours, speed) {
+  for (let i = 0; i < n; i++) {
+    const a = rnd(0, Math.PI * 2), v = rnd(...speed);
+    addPart({ kind: 'spark', x: o.x, y: o.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, drag: .92, g: 300, life: rnd(.4, .9), w: rnd(2, 4), tail: .06, color: pick(colours) });
+  }
+}
+function trainBurst(n, levelUp) {
+  const c = deckColours();
+  const count = trainPart('.train__count');
+  const p = posIn(count, scene());
+  const o = { x: p.x + count.offsetWidth / 2, y: p.y + count.offsetHeight / 2 };
+  trainSparks(o, levelUp ? 50 : 14 + Math.min(n, 10) * 4, [c.p3, c.p5, c.s3, '#ffffff'], levelUp ? [500, 1300] : [300, 800]);
+  if (n > 1 || levelUp) addPart({ kind: 'flash', x: o.x, y: o.y, r: levelUp ? 200 : 130, color: c.p3, life: .45 });
+  if (levelUp) {
+    // The level-up also bursts from the end of the track, where the train just arrived.
+    const track = trainPart('.train__track');
+    const t = posIn(track, scene());
+    const e = { x: t.x + track.offsetWidth, y: t.y + track.offsetHeight / 2 };
+    addPart({ kind: 'flash', x: e.x, y: e.y, r: 160, color: c.s3, life: .5 });
+    addPart({ kind: 'ring', x: e.x, y: e.y, r0: 10, r1: 160, life: .8, w: 5, color: c.s3 });
+    trainSparks(e, 40, [c.s3, c.s5, '#ffffff'], [400, 1100]);
+  }
+}
+
+// Full steam: puffs from the engine (now and then at level 1, a steady stream at the peak), and from level 2 speed
+// lines streaming past behind the train, denser and faster as the hype climbs. Rates are per second.
+function every(key, rate, dt, fn) {
+  trainAcc[key] += rate * dt;
+  while (trainAcc[key] >= 1) { trainAcc[key]--; fn(); }
+}
+function emitSteam(dt) {
+  const hype = trainHype(trainLevel(train.count, trainCfg().every));
+  const c = deckColours();
+  const lines = document.getElementById('train-lines');
+  if (hype > 0) every('line', hype * 50, dt, () => {
+    const speed = rnd(900, 2000) * (.6 + hype), len = rnd(60, 220);
+    addPart({ kind: 'line', layer: 'lines', x: lines.width + rnd(0, 80), y: rnd(8, lines.height - 8), vx: -speed, life: (lines.width + len + 100) / speed, len,
+      alpha: rnd(.12, .3) * (.6 + hype * .6), w: rnd(1, 2.5), color: pick([c.p3, c.s3, '#ffffff']) });
+  });
+  const loco = posIn(trainPart('.train__loco'), scene());
+  every('puff', 1 / (1.4 - hype * 1.2), dt, () => addPart({ kind: 'puff', x: loco.x - 6, y: loco.y - 18, vx: -rnd(30, 80) * (1 + hype * 3), vy: -rnd(20, 50), drag: .98, life: 1.2, size: rnd(14, 26) }));
+}
+
+// The loop asks for its next frame first, so nothing in a frame can stop it.
+function trainFrame(t) {
+  requestAnimationFrame(trainFrame);
+  const dt = Math.min(.05, (t - (trainLast || t)) / 1000);
+  trainLast = t;
+  renderTrain(Date.now());
+  for (const x of Object.values(trainCtxs)) { x.globalAlpha = 1; x.clearRect(0, 0, x.canvas.width, x.canvas.height); x.globalCompositeOperation = 'lighter'; }
+  if (trainLive) emitSteam(dt);
+  for (let i = trainParts.length - 1; i >= 0; i--) {
+    const p = trainParts[i];
+    if ((p.age += dt) >= p.life) { trainParts.splice(i, 1); continue; }
+    const d = p.drag ** (dt * 60);
+    p.vx *= d; p.vy *= d; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    TRAIN_DRAW[p.kind](trainCtxs[p.layer], p, p.age / p.life);
+  }
+}
+
+function startTrain() {
+  trainCtxs = { front: document.getElementById('train-fx').getContext('2d'), lines: document.getElementById('train-lines').getContext('2d') };
+  requestAnimationFrame(trainFrame);
+  setInterval(() => renderTrain(Date.now()), 250);
+}
+
 // -- StreamElements events --------------------------------------------
 
 window.addEventListener('onWidgetLoad', async (obj) => {
@@ -246,6 +475,11 @@ window.addEventListener('onWidgetLoad', async (obj) => {
   await loadState();
   renderRecord();
   renderVs();
+
+  try {
+    train = restoreTrain(window.SE_API && await SE_API.store.get(TRAIN_KEY), Date.now());
+  } catch (e) { /* no saved train */ }
+  startTrain();
 });
 
 window.addEventListener('onEventReceived', (obj) => {
@@ -255,5 +489,7 @@ window.addEventListener('onEventReceived', (obj) => {
   } else if (LATEST[listener]) {
     latest[LATEST[listener]] = latestText(listener, event);
     startTicker(LATEST[listener]);
+    const subs = fields.showTrain === false ? 0 : trainSubs(listener, event);
+    if (subs) addToTrain(subs, trainName(event));
   }
 });

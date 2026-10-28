@@ -40,6 +40,39 @@
     "step": 1,
     "group": "Ticker"
   },
+  "showTrain": {
+    "type": "checkbox",
+    "label": "Show a sub train in the bar when subs come in a run",
+    "value": true,
+    "group": "Sub train"
+  },
+  "trainSeconds": {
+    "type": "number",
+    "label": "Seconds each sub keeps the train going",
+    "value": 120,
+    "min": 15,
+    "max": 600,
+    "step": 5,
+    "group": "Sub train"
+  },
+  "trainShowFrom": {
+    "type": "number",
+    "label": "Show the train from this many subs",
+    "value": 2,
+    "min": 1,
+    "max": 10,
+    "step": 1,
+    "group": "Sub train"
+  },
+  "trainLevelEvery": {
+    "type": "number",
+    "label": "Subs per level",
+    "value": 5,
+    "min": 2,
+    "max": 20,
+    "step": 1,
+    "group": "Sub train"
+  },
   "resetHours": {
     "type": "number",
     "label": "Start a fresh record after this many hours without a result",
